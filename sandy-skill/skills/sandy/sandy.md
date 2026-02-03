@@ -81,10 +81,10 @@ Search for scenario files.
 
 ### Usage
 
-Search in Sandy scenarios folder (user-created):
+Search in project scenarios folder (user-created):
 
 ```bash
-find ${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios -name "*.json" -type f 2>/dev/null
+find .sandy/scenarios -name "*.json" -type f 2>/dev/null
 ```
 
 Search in examples folder (bundled):
@@ -133,8 +133,8 @@ Test workflows that users request or that would benefit from repeated reuse, the
    - Environment-specific values (URLs, paths)
    - Data that changes between runs
 5. **Generate** - Create scenario JSON from the recorded process
-6. **Save** - Write to `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json` (use the provided `<name>` as filename)
-7. **Verify** - Suggest `/sandy play <scenario>.json --dry-run`
+6. **Save** - Write to `.sandy/scenarios/<name>.json` in the current project (create directories if needed)
+7. **Verify** - Suggest `/sandy play .sandy/scenarios/<name>.json --dry-run`
 
 **DO NOT** write scenarios without first testing the workflow. The scenario must reflect actual, verified tool calls.
 
@@ -190,7 +190,7 @@ Test workflows that users request or that would benefit from repeated reuse, the
 
 | Location | Description |
 |----------|-------------|
-| `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/` | User-created scenarios |
+| `.sandy/scenarios/` | Project-local scenarios (user-created) |
 | `${CLAUDE_PLUGIN_ROOT}/assets/examples/` | Bundled examples |
 
 ### Bundled Examples
@@ -198,3 +198,10 @@ Test workflows that users request or that would benefit from repeated reuse, the
 - `supabase-query.json` - Database query
 - `multi-mcp-github-slack.json` - GitHub to Slack
 - `multi-mcp-web-to-db.json` - Web scraping to DB
+
+### Note
+
+User-created scenarios are stored in the project directory (`.sandy/scenarios/`), not in the plugin folder. This ensures scenarios are:
+- Version controlled with the project
+- Not lost during plugin updates
+- Shareable with team members
