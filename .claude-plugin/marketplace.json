@@ -1,5 +1,8 @@
 {
   "name": "sandy-plugins",
+  "metadata": {
+    "description": "Sandy - Record & Play MCP tool calls without LLM inference"
+  },
   "owner": {
     "name": "sangkwun",
     "email": "sangkwun@gmail.com"
