@@ -146,7 +146,7 @@ Sandy uses JSON scenarios (v2.1) to define tool call sequences:
 
 If you find Sandy useful, please consider supporting its development!
 
-<a href="https://polar.sh/darak"><img src="https://polar.sh/embed/seeks-funding-shield.svg?org=darak" /></a>
+[![Support on Polar](https://img.shields.io/badge/Support-Polar-blue?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0id2hpdGUiLz48L3N2Zz4=)](https://polar.sh/checkout/polar_c_jfPjDO6lpMcQHKl58MsxBWy9Yp9DZ9Iv9Xajy2XUj6V)
 
 Your contributions help keep the project maintained and allow me to focus on building new features.
 
