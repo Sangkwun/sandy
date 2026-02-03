@@ -15,7 +15,7 @@ Execute, list, or create MCP scenarios without LLM inference.
 |---------|-------------|
 | `play <scenario.json>` | Execute a scenario |
 | `list` | Find available scenarios |
-| `new <name>` | Create a new scenario |
+| `new <name>` | Test & record a workflow as scenario |
 
 ---
 
@@ -102,9 +102,38 @@ For each scenario found, show:
 
 ---
 
-## new - Create Scenario
+## new - Test & Record Scenario
 
-Create a new MCP scenario from template.
+Test workflows that users request or that would benefit from repeated reuse, then save the tested process as a replayable scenario.
+
+**Why test first?** Scenarios created without testing may not work. By executing the workflow first, you ensure the scenario is based on a verified, working process.
+
+### When to Use
+
+- User explicitly requests automation (`/sandy new`)
+- A workflow will be repeated multiple times
+- Consistent, deterministic execution is needed
+- Reducing LLM inference costs for repetitive tasks
+
+### Instructions
+
+**CRITICAL: You MUST test the workflow first, then create the scenario from the tested process.**
+
+1. **Understand** - Ask user what workflow they want to automate
+2. **Test** - Execute the workflow by actually performing the requested task
+3. **Record** - Track all MCP tool calls made during the test:
+   - Tool name (e.g., `mcp__chrome-devtools__click`)
+   - Parameters used
+   - Results received
+4. **Parameterize** - Identify values that should become variables:
+   - User inputs (names, IDs, search terms)
+   - Environment-specific values (URLs, paths)
+   - Data that changes between runs
+5. **Generate** - Create scenario JSON from the recorded process
+6. **Save** - Write to `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json`
+7. **Verify** - Suggest `/sandy play <scenario>.json --dry-run`
+
+**DO NOT** write scenarios without first testing the workflow. The scenario must reflect actual, verified tool calls.
 
 ### Scenario Schema (v2.1)
 
@@ -151,27 +180,6 @@ Create a new MCP scenario from template.
 |--------|-------------|
 | `{{VAR}}` | Static variable |
 | `{{step_id.field}}` | Previous step output |
-
-### Common MCP Tools
-
-**chrome-devtools:**
-- `mcp__chrome-devtools__navigate_page`
-- `mcp__chrome-devtools__click`
-- `mcp__chrome-devtools__fill`
-
-**supabase:**
-- `mcp__supabase__query`
-
-**github:**
-- `mcp__github__create_issue`
-
-### Instructions
-
-1. Ask user what to automate
-2. Identify MCP servers and tools
-3. Generate scenario JSON
-4. Save to `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json`
-5. Suggest `/sandy play ${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json --dry-run`
 
 ---
 
