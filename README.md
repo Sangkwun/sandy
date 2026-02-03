@@ -1,16 +1,16 @@
 <div align="center">
 
-# Sandy
+# Sandy 🦾
 
 ### A Sandevistan for your AI Agent
 
-**Record & Play MCP Tool calls without LLM inference**
+**Separate Thinking from Acting — Execute at Machine Speed**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-blueviolet)](https://github.com/Sangkwun/sandy)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io)
 
-[Installation](#installation) • [Features](#features) • [Scenario Format](#scenario-format) • [Documentation](#documentation)
+[Why Sandy?](#why-sandy) • [Installation](#installation) • [Features](#features) • [Scenario Format](#scenario-format) • [Documentation](#documentation)
 
 </div>
 
@@ -18,31 +18,69 @@
 
 ## Why Sandy?
 
-Sandy records MCP (Model Context Protocol) tool call sequences and replays them **without LLM inference**, dramatically reducing cost and latency.
+**What's the point of a browser automation bot that's slower than a human?**
+
+The reason traditional agents are slow is simple: **they think before every action.**
+
+Sandy solves this by **separating Reasoning from Action**.
+
+<br>
+
+### 🐢 Traditional Agent (Agentic Loop)
+
+```
+Observe ➔ 🧠 LLM Reasoning (slow...) ➔ Action ➔ Observe ➔ 🧠 LLM... (repeat)
+```
+> Stops to think before every click. Every. Single. Time.
+
+<br>
+
+### 🐇 Sandy (Scenario Replay)
+
+```
+1️⃣ Pilot:  First Run ➔ Capture Workflow ➔ Save as Scenario
+2️⃣ Run:    Load Scenario ➔ ⚡ Execute at machine speed
+```
+> Once you've blazed the trail, just follow the path — no thinking required.
+
+<br>
+
+**The LLM only helps find the path once.** After that, Sandy replays the saved scenario deterministically.
+
+<br>
+
+### ▶️ See the Difference
+
+> ⚠️ **The right side (Sandy) is real-time, NOT sped up.**
 
 [![Sandy Demo](https://img.youtube.com/vi/nSKs8sy7o2c/maxresdefault.jpg)](https://www.youtube.com/watch?v=nSKs8sy7o2c)
 
-| | Without Sandy | With Sandy |
+<br>
+
+### 📊 At a Glance
+
+| | 🐢 Without Sandy | 🐇 With Sandy |
 |:---:|:---|:---|
-| **Cost** | Token costs every execution | Zero cost replay |
-| **Speed** | LLM inference latency | Instant execution |
-| **Consistency** | Variable outputs | Deterministic results |
+| **Cost** | Token costs on every execution | Zero tokens after first run |
+| **Speed** | LLM inference latency per step | Instant, deterministic execution |
+| **Consistency** | Variable LLM outputs | Reproducible results every time |
+| **Use Case** | Exploration, first-time tasks | CI/CD, regression tests, repetitive workflows |
 
 ---
 
 ## How It Works
 
 ```
-┌─────────────────┐     Record      ┌─────────────────┐
+┌─────────────────┐      Pilot      ┌─────────────────┐
 │   AI Agent      │ ───────────────▶│   Scenario      │
 │  (with LLM)     │                 │    (.json)      │
 └─────────────────┘                 └────────┬────────┘
-                                             │
-                                             │ Play
-                                             ▼
+                                            │
+                                            │ Play (no LLM)
+                                            ▼
 ┌─────────────────┐                 ┌─────────────────┐
 │   MCP Servers   │ ◀───────────────│     Sandy       │
-│ (GitHub, DB...) │   Direct calls  │   (no LLM)      │
+│ (GitHub, DB...) │   Direct calls  │   ⚡ Fast       │
 └─────────────────┘                 └─────────────────┘
 ```
 
@@ -164,6 +202,6 @@ Contributions are welcome! Feel free to open issues and pull requests.
 
 **Apache License 2.0**
 
-Made with the speed of a Sandevistan
+Made with the speed of a Sandevistan ⚡
 
 </div>
