@@ -1,13 +1,13 @@
 ---
 name: sandy
-description: MCP Scenario Player - Record & Play MCP tool calls without LLM. Supports play (execute), list (find scenarios), and new (create scenario) subcommands.
+description: MCP Scenario Player - Record & Play MCP tool calls without LLM. Supports play (execute), list (find scenarios), and new (test & record workflow) subcommands.
 allowed-tools: Bash, Read, Write, Glob
 argument-hint: <play|list|new> [options]
 ---
 
 # Sandy - MCP Scenario Player
 
-Execute, list, or create MCP scenarios without LLM inference.
+Execute, list, or record MCP scenarios without LLM inference.
 
 ## Subcommands
 
@@ -39,6 +39,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py <scenario.json> [options] --json
 | `--env FILE` | Load variables from .env file |
 | `--dry-run` | Validate without executing |
 | `--debug` | Enable debug output |
+| `--json` | Output result as JSON |
 
 ### Examples
 
