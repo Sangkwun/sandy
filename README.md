@@ -20,6 +20,8 @@
 
 Sandy records MCP (Model Context Protocol) tool call sequences and replays them **without LLM inference**, dramatically reducing cost and latency.
 
+[![Sandy Demo](https://img.youtube.com/vi/nSKs8sy7o2c/maxresdefault.jpg)](https://www.youtube.com/watch?v=nSKs8sy7o2c)
+
 | | Without Sandy | With Sandy |
 |:---:|:---|:---|
 | **Cost** | Token costs every execution | Zero cost replay |

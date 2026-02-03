@@ -19,6 +19,10 @@ Sandy is ideal for:
 - Regression testing
 - Cost-sensitive operations
 
+## Demo
+
+[![Sandy Demo](https://img.youtube.com/vi/nSKs8sy7o2c/maxresdefault.jpg)](https://www.youtube.com/watch?v=nSKs8sy7o2c)
+
 ## Installation
 
 ### As Claude Code Plugin (Recommended)
