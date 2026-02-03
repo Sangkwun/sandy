@@ -60,8 +60,10 @@ Sandy records MCP (Model Context Protocol) tool call sequences and replays them 
 
 **Usage:**
 ```bash
-/sandy:play scenario.json
-/sandy:play scenario.json --var TITLE="Bug Fix"
+/sandy play scenario.json
+/sandy play scenario.json --var TITLE="Bug Fix"
+/sandy list
+/sandy new my-workflow
 ```
 
 ### Standalone CLI
@@ -137,6 +139,16 @@ Sandy uses JSON scenarios (v2.1) to define tool call sequences:
 | [Sandy Skill README](sandy-skill/README.md) | Detailed usage guide |
 | [Scenario Schema](sandy-skill/references/schema.md) | JSON format specification |
 | [Example Scenarios](sandy-skill/assets/examples/) | Working examples |
+
+---
+
+## Support
+
+If you find Sandy useful, please consider supporting its development!
+
+<a href="https://polar.sh/darak"><img src="https://polar.sh/embed/seeks-funding-shield.svg?org=darak" /></a>
+
+Your contributions help keep the project maintained and allow me to focus on building new features.
 
 ---
 
