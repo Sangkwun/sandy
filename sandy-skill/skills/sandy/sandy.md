@@ -107,6 +107,8 @@ For each scenario found, show:
 
 Test workflows that users request or that would benefit from repeated reuse, then save the tested process as a replayable scenario.
 
+**Usage:** `/sandy new <name>` where `<name>` is the scenario identifier (used as filename and metadata name).
+
 **Why test first?** Scenarios created without testing may not work. By executing the workflow first, you ensure the scenario is based on a verified, working process.
 
 ### When to Use
@@ -131,7 +133,7 @@ Test workflows that users request or that would benefit from repeated reuse, the
    - Environment-specific values (URLs, paths)
    - Data that changes between runs
 5. **Generate** - Create scenario JSON from the recorded process
-6. **Save** - Write to `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json`
+6. **Save** - Write to `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json` (use the provided `<name>` as filename)
 7. **Verify** - Suggest `/sandy play <scenario>.json --dry-run`
 
 **DO NOT** write scenarios without first testing the workflow. The scenario must reflect actual, verified tool calls.

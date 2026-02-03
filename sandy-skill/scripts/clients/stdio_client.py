@@ -127,6 +127,12 @@ class StdioClient(MCPClient):
         try:
             result = await self._session.call_tool(tool_name, params)
             data = extract_content_data(result.content) if result.content else None
+
+            # Check if MCP returned an error
+            if result.isError:
+                error_msg = data if isinstance(data, str) else str(data) if data else "Tool call failed"
+                return ToolResult(success=False, data=data, error=error_msg)
+
             return ToolResult(success=True, data=data)
 
         except Exception as e:
