@@ -1,0 +1,118 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "YouTube Cyberpunk Edgerunners Search",
+    "description": "Search and play Cyberpunk: Edgerunners videos on YouTube"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "tabs",
+      "tool": "mcp__claude-in-chrome__tabs_context_mcp",
+      "params": {},
+      "output": {
+        "firstTabId": "$.availableTabs[0].tabId"
+      },
+      "description": "Get browser tab context"
+    },
+    {
+      "step": 2,
+      "tool": "mcp__claude-in-chrome__navigate",
+      "params": {
+        "url": "https://www.youtube.com",
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "Navigate to YouTube"
+    },
+    {
+      "step": 3,
+      "tool": "sandy__wait",
+      "params": {
+        "seconds": 2
+      },
+      "description": "Wait for page load"
+    },
+    {
+      "step": 4,
+      "tool": "mcp__claude-in-chrome__computer",
+      "params": {
+        "action": "left_click",
+        "coordinate": [680, 28],
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "Click search bar"
+    },
+    {
+      "step": 5,
+      "tool": "sandy__wait",
+      "params": {
+        "seconds": 0.5
+      },
+      "description": "Wait for search focus"
+    },
+    {
+      "step": 6,
+      "tool": "mcp__claude-in-chrome__computer",
+      "params": {
+        "action": "type",
+        "text": "Cyberpunk: Edgerunners",
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "Type search query"
+    },
+    {
+      "step": 7,
+      "tool": "mcp__claude-in-chrome__computer",
+      "params": {
+        "action": "key",
+        "text": "Enter",
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "Press Enter to search"
+    },
+    {
+      "step": 8,
+      "tool": "sandy__wait",
+      "params": {
+        "seconds": 3
+      },
+      "description": "Wait for search results"
+    },
+    {
+      "step": 9,
+      "tool": "mcp__claude-in-chrome__computer",
+      "params": {
+        "action": "screenshot",
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "Screenshot search results"
+    },
+    {
+      "step": 10,
+      "tool": "mcp__claude-in-chrome__computer",
+      "params": {
+        "action": "left_click",
+        "coordinate": [450, 280],
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "Click first video result"
+    },
+    {
+      "step": 11,
+      "tool": "sandy__wait",
+      "params": {
+        "seconds": 3
+      },
+      "description": "Wait for video to load"
+    },
+    {
+      "step": 12,
+      "tool": "mcp__claude-in-chrome__computer",
+      "params": {
+        "action": "screenshot",
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "View video"
+    }
+  ]
+}

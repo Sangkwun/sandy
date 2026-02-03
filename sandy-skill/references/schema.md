@@ -187,7 +187,8 @@ The `on_error` field controls behavior when a step fails:
 {
   "retry": {
     "count": 3,
-    "delay": 500
+    "delay": 500,
+    "condition": "element_not_found"
   }
 }
 ```
@@ -196,6 +197,25 @@ The `on_error` field controls behavior when a step fails:
 |-------|------|---------|-------------|
 | `count` | number | 3 | Maximum retry attempts |
 | `delay` | number | 500 | Delay between retries (ms) |
+| `condition` | string | null | Only retry if error message contains this string |
+
+The `condition` field enables selective retry - only retry when the error matches:
+
+```json
+{
+  "step": 2,
+  "tool": "mcp__chrome-devtools__click",
+  "params": { "uid": "submit-btn" },
+  "on_error": "retry",
+  "retry": {
+    "count": 3,
+    "delay": 500,
+    "condition": "not found"
+  }
+}
+```
+
+This step will only retry if the error contains "not found". Other errors (like network failures) will stop immediately.
 
 ### Conditional Execution
 
@@ -210,6 +230,245 @@ The `condition` field supports simple expressions:
 Supported operators:
 - `==` - Equality
 - `!=` - Inequality
+
+## UI Interaction Best Practices
+
+When creating scenarios that interact with web pages (using `chrome-devtools` MCP), follow these guidelines for stable and maintainable automation:
+
+### Use UID-based Selection (Recommended)
+
+Always prefer element identifiers (`uid`) over coordinate-based interactions:
+
+```json
+{
+  "step": 1,
+  "tool": "mcp__chrome-devtools__click",
+  "params": {
+    "uid": "submit-button"
+  }
+}
+```
+
+### Avoid Coordinate-based Clicks
+
+**Do NOT use coordinate-based parameters** like `x`, `y`, or `coordinates`:
+
+```json
+// ❌ Bad - Fragile, breaks on layout changes
+{
+  "params": {
+    "x": 150,
+    "y": 320
+  }
+}
+
+// ✅ Good - Stable, works across viewports
+{
+  "params": {
+    "uid": "login-btn"
+  }
+}
+```
+
+### Why Avoid Coordinates?
+
+| Issue | Impact |
+|-------|--------|
+| Viewport changes | Different screen sizes break the scenario |
+| Layout shifts | Any UI update invalidates coordinates |
+| Responsiveness | Mobile/desktop views differ |
+| Maintenance | Hard to debug which element was targeted |
+| Reproducibility | May work on one machine but fail on another |
+
+### Recommended Interaction Patterns
+
+| Action | Tool | Params |
+|--------|------|--------|
+| Click element | `click` | `{ "uid": "element-id" }` |
+| Fill input | `fill` | `{ "uid": "input-id", "value": "text" }` |
+| Submit form | `fill_form` | `{ "elements": [...] }` |
+| Wait for element | `wait_for` | `{ "text": "Expected text" }` |
+| Take snapshot | `take_snapshot` | `{}` (get UIDs from snapshot) |
+
+### Finding Stable UIDs
+
+1. Use `take_snapshot` to get the current page's accessibility tree
+2. Look for semantic IDs, data-testid attributes, or ARIA labels
+3. Prefer IDs that are unlikely to change (e.g., `login-form` over `div-47`)
+
+## Sandy Internal Tools
+
+Sandy provides built-in tools that don't require MCP servers. These tools use the `sandy__` prefix.
+
+### sandy__wait
+
+Wait for a specified duration.
+
+```json
+{
+  "step": 1,
+  "tool": "sandy__wait",
+  "params": { "duration": 2.0 }
+}
+```
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `duration` | number | Wait time in seconds |
+
+### sandy__log
+
+Log a message (useful for debugging).
+
+```json
+{
+  "step": 2,
+  "tool": "sandy__log",
+  "params": { "message": "Step completed" }
+}
+```
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `message` | string | Message to log |
+
+### sandy__wait_for_element
+
+Wait for an element to appear on the page. Requires `chrome-devtools` MCP server.
+
+```json
+{
+  "step": 3,
+  "tool": "sandy__wait_for_element",
+  "params": {
+    "selector": "button.submit",
+    "timeout": 10,
+    "interval": 0.5
+  }
+}
+```
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `selector` | string | (required) | CSS selector to wait for |
+| `timeout` | number | 10 | Maximum wait time in seconds |
+| `interval` | number | 0.5 | Polling interval in seconds |
+| `mcp_server` | string | "chrome-devtools" | MCP server to use for DOM access |
+
+This tool is more efficient than writing custom JavaScript retry loops:
+
+```json
+// ❌ Before: Manual retry in JavaScript
+{
+  "tool": "mcp__chrome-devtools__evaluate_script",
+  "params": {
+    "function": "async () => { for(let i=0; i<10; i++) { const el = document.querySelector('button'); if(el) return true; await new Promise(r => setTimeout(r, 500)); } throw new Error('Not found'); }"
+  }
+}
+
+// ✅ After: Built-in wait
+{
+  "tool": "sandy__wait_for_element",
+  "params": { "selector": "button", "timeout": 5 }
+}
+```
+
+### sandy__wait_until
+
+Wait until a JavaScript expression evaluates to true. Requires `chrome-devtools` MCP server.
+
+```json
+{
+  "step": 4,
+  "tool": "sandy__wait_until",
+  "params": {
+    "expression": "document.querySelector('.loading') === null",
+    "timeout": 30,
+    "interval": 0.5
+  }
+}
+```
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `expression` | string | (required) | JavaScript expression that should evaluate to true |
+| `timeout` | number | 30 | Maximum wait time in seconds |
+| `interval` | number | 0.5 | Polling interval in seconds |
+| `mcp_server` | string | "chrome-devtools" | MCP server to use for script execution |
+
+Use cases:
+- Wait for loading spinner to disappear: `document.querySelector('.loading') === null`
+- Wait for API response: `window.apiData !== undefined`
+- Wait for element count: `document.querySelectorAll('.item').length >= 5`
+
+### sandy__append_file
+
+Append data to a file in various formats. Useful for collecting scraped data or logging results.
+
+```json
+{
+  "step": 3,
+  "tool": "sandy__append_file",
+  "params": {
+    "path": "/tmp/products.jsonl",
+    "format": "jsonl",
+    "data": "{{scrape_result.items}}"
+  }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | Yes | Target file path |
+| `format` | string | No | Output format: `jsonl` (default), `csv`, `json` |
+| `data` | any | Yes | Data to append (single item or array) |
+
+#### Supported Formats
+
+| Format | Behavior |
+|--------|----------|
+| `jsonl` | Append each item as a single JSON line (JSON Lines format) |
+| `csv` | Append as CSV rows; header is written on first append only |
+| `json` | Append to JSON array (reads entire file, modifies, writes back) |
+
+#### Example: Web Scraping to File
+
+```json
+{
+  "version": "2.1",
+  "metadata": { "name": "Scrape Products to File" },
+  "variables": {
+    "TARGET_URL": "https://shop.example.com/products",
+    "OUTPUT_PATH": "/tmp/products.jsonl"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "tool": "mcp__chrome-devtools__navigate_page",
+      "params": { "url": "{{TARGET_URL}}" },
+      "wait_after": 2.0
+    },
+    {
+      "step": 2,
+      "id": "scrape",
+      "tool": "mcp__chrome-devtools__evaluate_script",
+      "params": {
+        "function": "() => Array.from(document.querySelectorAll('.product')).map(el => ({ name: el.querySelector('.name')?.innerText, price: el.querySelector('.price')?.innerText }))"
+      },
+      "output": { "items": "$" }
+    },
+    {
+      "step": 3,
+      "tool": "sandy__append_file",
+      "params": {
+        "path": "{{OUTPUT_PATH}}",
+        "format": "jsonl",
+        "data": "{{scrape.items}}"
+      }
+    }
+  ]
+}
+```
 
 ## Legacy v1.1 Compatibility
 
@@ -287,4 +546,50 @@ Actions are automatically converted to chrome-devtools tools:
     }
   ]
 }
+```
+
+## CLI Debug Options
+
+The `play.py` CLI provides several debug options for troubleshooting scenarios.
+
+### Screenshot on Failure
+
+Automatically capture screenshots when a step fails. Requires `chrome-devtools` MCP server.
+
+```bash
+python play.py scenario.json --screenshot-on-failure --screenshot-dir ./debug-screenshots
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--screenshot-on-failure` | false | Enable automatic screenshot capture on step failure |
+| `--screenshot-dir` | `./screenshots` | Directory to save failure screenshots |
+
+Screenshots are saved with the pattern: `step{N}_failure_{timestamp}.png`
+
+### Debug Mode
+
+Enable verbose debug output:
+
+```bash
+python play.py scenario.json --debug --include-results on_failure
+```
+
+| Option | Description |
+|--------|-------------|
+| `--debug` | Show detailed execution logs including params and results |
+| `--include-results true` | Always include MCP raw results in output |
+| `--include-results on_failure` | Include results only when step fails |
+| `--include-results false` | Never include results (default, saves tokens) |
+
+### Partial Execution
+
+Run specific steps for debugging:
+
+```bash
+# Run only steps 3-5
+python play.py scenario.json --start 3 --end 5
+
+# Dry run (validate without executing)
+python play.py scenario.json --dry-run
 ```

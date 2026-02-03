@@ -19,6 +19,8 @@ Sandy 시나리오 예시 모음. 단일 MCP 및 멀티 MCP 조합 패턴을 다
 
 브라우저 페이지 조회 및 스냅샷 캡처.
 
+> ⚠️ **중요**: UI 상호작용 시 좌표 기반 클릭(`x`, `y`)을 사용하지 마세요. 항상 `uid` 기반 선택자를 사용해야 안정적인 시나리오를 만들 수 있습니다. 자세한 내용은 [schema.md의 UI Interaction Best Practices](../../references/schema.md#ui-interaction-best-practices)를 참조하세요.
+
 ```json
 {
   "steps": [

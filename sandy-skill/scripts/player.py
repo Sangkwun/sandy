@@ -8,11 +8,13 @@ Supports variable substitution and output extraction.
 from __future__ import annotations
 
 import asyncio
+import csv
 import json
 import re
 import time
 from dataclasses import dataclass, field
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Callable, Literal
 
 from jsonpath_ng import parse as jsonpath_parse
@@ -107,6 +109,10 @@ class PlayerOptions:
     # - True: Always include MCP raw results
     # - "on_failure": Only include results when step fails
     include_results: bool | Literal["on_failure"] = False
+
+    # Debug: Auto-capture screenshot on step failure (requires chrome-devtools MCP)
+    screenshot_on_failure: bool = False
+    screenshot_dir: str = "./screenshots"
 
     # Callbacks
     on_step_start: Callable[[int, int, str], None] | None = None
@@ -283,10 +289,12 @@ class ScenarioPlayer:
         # Get retry settings
         max_retries = 1
         retry_delay = 0.5
+        retry_condition = None
         if step.on_error == "retry":
             retry_config = step.retry or {}
             max_retries = retry_config.get("count", 3)
             retry_delay = retry_config.get("delay", 500) / 1000.0
+            retry_condition = retry_config.get("condition")
 
         # Execute with retries
         for attempt in range(1, max_retries + 1):
@@ -310,8 +318,18 @@ class ScenarioPlayer:
                 if self.options.debug:
                     print(f"  [ERROR] Attempt {attempt}/{max_retries}: {e}")
 
+                # Check retry condition - only retry if error matches condition
+                if retry_condition and retry_condition not in str(e):
+                    if self.options.debug:
+                        print(f"  [RETRY] Condition '{retry_condition}' not matched, stopping retries")
+                    break
+
                 if attempt < max_retries:
                     await asyncio.sleep(retry_delay)
+
+        # Capture screenshot on failure (if enabled)
+        if not step_result.success and self.options.screenshot_on_failure:
+            await self._capture_failure_screenshot(step)
 
         return step_result
 
@@ -351,14 +369,15 @@ class ScenarioPlayer:
         Execute Sandy internal tools (no MCP call)
 
         Supported tools:
-        - sandy__wait: Wait for specified duration (seconds)
+        - sandy__wait: Wait for specified duration (params: seconds or duration)
         - sandy__log: Log a message (debug)
         """
         tool_name = step.tool.removeprefix("sandy__")
 
         try:
             if tool_name == "wait":
-                duration = params.get("duration", 0)
+                # Support both "seconds" and "duration" parameters
+                duration = params.get("seconds") or params.get("duration") or 0
                 if self.options.debug:
                     print(f"  [INTERNAL] wait {duration}s")
                 await asyncio.sleep(duration)
@@ -371,6 +390,90 @@ class ScenarioPlayer:
                 step_result.success = True
                 step_result.result = {"logged": message}
 
+            elif tool_name == "append_file":
+                file_path = params.get("path")
+                fmt = params.get("format", "jsonl")
+                data = params.get("data")
+
+                if not file_path:
+                    raise ValueError("'path' parameter is required")
+
+                result = self._append_to_file(file_path, fmt, data)
+                if self.options.debug:
+                    print(f"  [INTERNAL] append_file: {result}")
+                step_result.success = True
+                step_result.result = result
+
+            elif tool_name == "wait_for_element":
+                selector = params.get("selector")
+                timeout = params.get("timeout", 10)
+                interval = params.get("interval", 0.5)
+                mcp_server = params.get("mcp_server", "chrome-devtools")
+
+                if not selector:
+                    raise ValueError("'selector' parameter is required")
+
+                if self.options.debug:
+                    print(f"  [INTERNAL] wait_for_element: {selector} (timeout={timeout}s)")
+
+                start = time.time()
+                found = False
+                while time.time() - start < timeout:
+                    try:
+                        client = await self._get_client(mcp_server)
+                        # Escape selector for JS string (backslash first, then quotes)
+                        escaped_selector = selector.replace("\\", "\\\\").replace("'", "\\'")
+                        tool_result = await client.call_tool("evaluate_script", {
+                            "function": f"() => document.querySelector('{escaped_selector}') !== null"
+                        })
+                        if tool_result.success and tool_result.data is True:
+                            found = True
+                            break
+                    except Exception:
+                        pass
+                    await asyncio.sleep(interval)
+
+                if found:
+                    elapsed = time.time() - start
+                    step_result.success = True
+                    step_result.result = {"found": True, "selector": selector, "elapsed": round(elapsed, 2)}
+                else:
+                    raise TimeoutError(f"Element '{selector}' not found within {timeout}s")
+
+            elif tool_name == "wait_until":
+                expression = params.get("expression")
+                timeout = params.get("timeout", 30)
+                interval = params.get("interval", 0.5)
+                mcp_server = params.get("mcp_server", "chrome-devtools")
+
+                if not expression:
+                    raise ValueError("'expression' parameter is required")
+
+                if self.options.debug:
+                    print(f"  [INTERNAL] wait_until: {expression} (timeout={timeout}s)")
+
+                start = time.time()
+                condition_met = False
+                while time.time() - start < timeout:
+                    try:
+                        client = await self._get_client(mcp_server)
+                        tool_result = await client.call_tool("evaluate_script", {
+                            "function": f"() => Boolean({expression})"
+                        })
+                        if tool_result.success and tool_result.data is True:
+                            condition_met = True
+                            break
+                    except Exception:
+                        pass
+                    await asyncio.sleep(interval)
+
+                if condition_met:
+                    elapsed = time.time() - start
+                    step_result.success = True
+                    step_result.result = {"condition_met": True, "elapsed": round(elapsed, 2)}
+                else:
+                    raise TimeoutError(f"Condition '{expression}' not met within {timeout}s")
+
             else:
                 step_result.success = False
                 step_result.error = f"Unknown internal tool: {step.tool}"
@@ -380,6 +483,82 @@ class ScenarioPlayer:
             step_result.error = str(e)
 
         return step_result
+
+    def _append_to_file(self, file_path: str, fmt: str, data: Any) -> dict[str, Any]:
+        """
+        Append data to file in specified format
+
+        Args:
+            file_path: Target file path
+            fmt: Format - "jsonl", "csv", or "json"
+            data: Data to append (single item or list)
+
+        Returns:
+            Result dict with appended count and path
+        """
+        path = Path(file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        if fmt == "jsonl":
+            return self._append_jsonl(path, data)
+        elif fmt == "csv":
+            return self._append_csv(path, data)
+        elif fmt == "json":
+            return self._append_json(path, data)
+        else:
+            raise ValueError(f"Unsupported format: {fmt}. Use 'jsonl', 'csv', or 'json'")
+
+    def _append_jsonl(self, path: Path, data: Any) -> dict[str, Any]:
+        """Append data as JSON Lines (one JSON object per line)"""
+        items = data if isinstance(data, list) else [data]
+        with open(path, "a", encoding="utf-8") as f:
+            for item in items:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        return {"appended": len(items), "path": str(path)}
+
+    def _append_csv(self, path: Path, data: Any) -> dict[str, Any]:
+        """Append data as CSV rows (with header on first write)"""
+        items = data if isinstance(data, list) else [data]
+        if not items:
+            return {"appended": 0, "path": str(path)}
+
+        # Flatten nested dicts for CSV compatibility
+        flat_items = [self._flatten_dict(item) if isinstance(item, dict) else {"value": item} for item in items]
+
+        file_exists = path.exists() and path.stat().st_size > 0
+        with open(path, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=flat_items[0].keys())
+            if not file_exists:
+                writer.writeheader()
+            writer.writerows(flat_items)
+        return {"appended": len(items), "path": str(path)}
+
+    def _append_json(self, path: Path, data: Any) -> dict[str, Any]:
+        """Append data to JSON array (reads entire file, modifies, writes back)"""
+        items = data if isinstance(data, list) else [data]
+        existing: list[Any] = []
+        if path.exists():
+            content = path.read_text(encoding="utf-8")
+            if content.strip():
+                existing = json.loads(content)
+                if not isinstance(existing, list):
+                    existing = [existing]
+        existing.extend(items)
+        path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
+        return {"appended": len(items), "total": len(existing), "path": str(path)}
+
+    def _flatten_dict(self, d: dict[str, Any], parent_key: str = "", sep: str = "_") -> dict[str, Any]:
+        """Flatten nested dict for CSV compatibility"""
+        items: list[tuple[str, Any]] = []
+        for k, v in d.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(self._flatten_dict(v, new_key, sep).items())
+            elif isinstance(v, list):
+                items.append((new_key, json.dumps(v, ensure_ascii=False)))
+            else:
+                items.append((new_key, v))
+        return dict(items)
 
     async def _get_client(self, server_name: str) -> MCPClient:
         """Get or create MCP client for server"""
@@ -401,6 +580,47 @@ class ScenarioPlayer:
             except Exception:
                 pass  # Ignore errors during cleanup
         self._clients.clear()
+
+    async def _capture_failure_screenshot(self, step: Step) -> str | None:
+        """
+        Capture screenshot on step failure (debug feature)
+
+        Requires chrome-devtools MCP server to be available.
+
+        Returns:
+            Screenshot file path if successful, None otherwise
+        """
+        try:
+            # Check if chrome-devtools client exists or can be created
+            client = await self._get_client("chrome-devtools")
+
+            # Create screenshot directory
+            screenshot_dir = Path(self.options.screenshot_dir)
+            screenshot_dir.mkdir(parents=True, exist_ok=True)
+
+            # Generate filename with timestamp
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            filename = f"step{step.step}_failure_{timestamp}.png"
+            filepath = screenshot_dir / filename
+
+            # Take screenshot
+            tool_result = await client.call_tool("take_screenshot", {
+                "filePath": str(filepath)
+            })
+
+            if tool_result.success:
+                if self.options.debug:
+                    print(f"  [DEBUG] Screenshot saved: {filepath}")
+                return str(filepath)
+            else:
+                if self.options.debug:
+                    print(f"  [DEBUG] Screenshot failed: {tool_result.error}")
+                return None
+
+        except Exception as e:
+            if self.options.debug:
+                print(f"  [DEBUG] Screenshot capture error: {e}")
+            return None
 
     def _substitute_variables(self, params: dict[str, Any]) -> dict[str, Any]:
         """

@@ -214,27 +214,45 @@ If `$1` is empty, ask the user for a scenario name before proceeding.
 
 ### Sandy Internal Tools
 
-Sandy provides built-in tools that don't require MCP calls. Use these for timing control without MCP timeout issues.
+Sandy provides built-in tools that don't require MCP calls.
 
 | Tool | Params | Description |
 |------|--------|-------------|
-| `sandy__wait` | `duration` (seconds) | Wait for specified duration (no timeout limit) |
+| `sandy__wait` | `duration` | Wait for specified duration (no timeout limit) |
 | `sandy__log` | `message` | Log a message (always printed) |
+| `sandy__append_file` | `path`, `format`, `data` | Append data to file (jsonl/csv/json) |
+| `sandy__wait_for_element` | `selector`, `timeout`, `interval` | Wait for CSS selector to appear |
+| `sandy__wait_until` | `expression`, `timeout`, `interval` | Wait for JS expression to be true |
 
-**Example - Long wait without timeout:**
+**Example - Long wait:**
+```json
+{ "tool": "sandy__wait", "params": { "duration": 90 } }
+```
+
+**Example - Save scraped data:**
 ```json
 {
-  "step": 5,
-  "tool": "sandy__wait",
-  "params": { "duration": 90 },
-  "description": "Wait 90 seconds for AI generation"
+  "tool": "sandy__append_file",
+  "params": { "path": "{{OUTPUT_PATH}}", "format": "jsonl", "data": "{{scrape.items}}" }
 }
 ```
 
-**Why use `sandy__wait` instead of MCP wait?**
-- MCP tools have ~30 second timeout
-- `sandy__wait` runs internally with no timeout limit
-- Better for long-running operations (AI generation, file uploads, etc.)
+**Example - Wait for element:**
+```json
+{ "tool": "sandy__wait_for_element", "params": { "selector": "button.submit", "timeout": 10 } }
+```
+
+**Example - Wait for condition:**
+```json
+{ "tool": "sandy__wait_until", "params": { "expression": "document.querySelector('.loading') === null", "timeout": 30 } }
+```
+
+**append_file formats:** `jsonl` (default), `csv`, `json`
+
+**Why use internal tools?**
+- `sandy__wait`: No MCP timeout limit (MCP ~30s limit)
+- `sandy__wait_for_element/until`: Cleaner than JS retry loops
+- `sandy__append_file`: No filesystem MCP setup needed
 
 ---
 

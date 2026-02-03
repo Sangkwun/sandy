@@ -158,6 +158,20 @@ def parse_args() -> argparse.Namespace:
         help="Include MCP raw results: true, false (default), or on_failure",
     )
 
+    parser.add_argument(
+        "--screenshot-on-failure",
+        action="store_true",
+        help="Capture screenshot on step failure (requires chrome-devtools MCP)",
+    )
+
+    parser.add_argument(
+        "--screenshot-dir",
+        type=str,
+        default="./screenshots",
+        metavar="DIR",
+        help="Directory to save failure screenshots (default: ./screenshots)",
+    )
+
     return parser.parse_args()
 
 
@@ -305,6 +319,8 @@ async def main() -> int:
             dry_run=args.dry_run,
             debug=args.debug,
             include_results=include_results,
+            screenshot_on_failure=args.screenshot_on_failure,
+            screenshot_dir=args.screenshot_dir,
             on_step_start=None if args.json else reporter.step_start,
             on_step_complete=None if args.json else reporter.step_complete,
         )

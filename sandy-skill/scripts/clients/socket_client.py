@@ -205,11 +205,20 @@ class ClaudeInChromeSocketClient(MCPClient):
             return False
 
     async def _create_tab(self) -> None:
-        """Create a new tab for this session"""
-        # First get context to ensure group exists
-        await self._send_request("tabs_context_mcp", {"createIfEmpty": True})
+        """Get or create a tab for this session"""
+        # First check for existing tabs (don't create if empty)
+        result = await self._send_request("tabs_context_mcp", {"createIfEmpty": False})
 
-        # Create new tab
+        # Try to reuse existing tab
+        if isinstance(result, dict):
+            available_tabs = result.get("availableTabs", [])
+            if available_tabs and isinstance(available_tabs, list) and len(available_tabs) > 0:
+                first_tab = available_tabs[0]
+                if isinstance(first_tab, dict) and "tabId" in first_tab:
+                    self._tab_id = first_tab["tabId"]
+                    return
+
+        # No existing tabs, create new one
         result = await self._send_request("tabs_create_mcp", {})
 
         # Extract tabId from result
