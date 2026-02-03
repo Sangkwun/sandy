@@ -12,7 +12,7 @@
       "name": "sandy",
       "source": "./sandy-skill",
       "description": "MCP Scenario Player - Record & Play MCP tool calls without LLM",
-      "version": "1.2.0"
+      "version": "1.2.1"
     }
   ]
 }
