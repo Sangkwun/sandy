@@ -76,20 +76,20 @@ Recovery: `/sandy play scenario.json --start <failed_step>`
 
 ## list - Find Scenarios
 
-Search for scenario files in the project.
+Search for scenario files.
 
 ### Usage
 
-Search for scenario files:
+Search in Sandy scenarios folder (user-created):
 
 ```bash
-find ${CLAUDE_PLUGIN_ROOT}/assets/examples -name "*.json" -type f 2>/dev/null | head -20
+find ${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios -name "*.json" -type f 2>/dev/null
 ```
 
-Also check project locations:
+Search in examples folder (bundled):
 
 ```bash
-find . -path "./.venv" -prune -o -path "./node_modules" -prune -o -name "*.json" -type f -print 2>/dev/null | xargs grep -l '"version".*"2\.' 2>/dev/null | head -20
+find ${CLAUDE_PLUGIN_ROOT}/assets/examples -name "*.json" -type f 2>/dev/null
 ```
 
 ### Output Format
@@ -170,14 +170,20 @@ Create a new MCP scenario from template.
 1. Ask user what to automate
 2. Identify MCP servers and tools
 3. Generate scenario JSON
-4. Save to `scenarios/<name>.json`
-5. Suggest `/sandy play <path> --dry-run`
+4. Save to `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json`
+5. Suggest `/sandy play ${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/<name>.json --dry-run`
 
 ---
 
-## Example Scenarios
+## Scenario Locations
 
-See `${CLAUDE_PLUGIN_ROOT}/assets/examples/`:
+| Location | Description |
+|----------|-------------|
+| `${CLAUDE_PLUGIN_ROOT}/skills/sandy/scenarios/` | User-created scenarios |
+| `${CLAUDE_PLUGIN_ROOT}/assets/examples/` | Bundled examples |
+
+### Bundled Examples
+
 - `supabase-query.json` - Database query
 - `multi-mcp-github-slack.json` - GitHub to Slack
 - `multi-mcp-web-to-db.json` - Web scraping to DB
