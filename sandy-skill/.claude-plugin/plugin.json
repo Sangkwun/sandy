@@ -1,7 +1,7 @@
 {
   "name": "sandy",
   "description": "MCP Scenario Player - Record & Play MCP tool calls without LLM (deterministic replay, zero token cost)",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "author": {
     "name": "sangkwun"
   },

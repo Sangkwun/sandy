@@ -39,14 +39,13 @@ Run MCP scenarios deterministically without LLM.
 
 ### Usage
 
-When `$0` is "play", execute:
+When `$0` is "play", construct and execute the command:
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py $1 $2 $3 $4 $5 --json
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py <scenario_path> [options] --json
 ```
 
-- `$1`: scenario file path (required)
-- `$2`-`$5`: optional flags (--var, --start, --end, etc.)
+Build the command by including all provided arguments. The `--json` flag should always be at the end.
 
 ### Options
 
@@ -136,6 +135,8 @@ Test workflows that users request or that would benefit from repeated reuse, the
 
 When `$0` is "new", use `$1` as the scenario name (used as filename and metadata name).
 
+If `$1` is empty, ask the user for a scenario name before proceeding.
+
 **Why test first?** Scenarios created without testing may not work. By executing the workflow first, you ensure the scenario is based on a verified, working process.
 
 ### When to Use
@@ -210,6 +211,30 @@ When `$0` is "new", use `$1` as the scenario name (used as filename and metadata
 |--------|-------------|
 | `{{VAR}}` | Static variable |
 | `{{step_id.field}}` | Previous step output |
+
+### Sandy Internal Tools
+
+Sandy provides built-in tools that don't require MCP calls. Use these for timing control without MCP timeout issues.
+
+| Tool | Params | Description |
+|------|--------|-------------|
+| `sandy__wait` | `duration` (seconds) | Wait for specified duration (no timeout limit) |
+| `sandy__log` | `message` | Log a message (always printed) |
+
+**Example - Long wait without timeout:**
+```json
+{
+  "step": 5,
+  "tool": "sandy__wait",
+  "params": { "duration": 90 },
+  "description": "Wait 90 seconds for AI generation"
+}
+```
+
+**Why use `sandy__wait` instead of MCP wait?**
+- MCP tools have ~30 second timeout
+- `sandy__wait` runs internally with no timeout limit
+- Better for long-running operations (AI generation, file uploads, etc.)
 
 ---
 

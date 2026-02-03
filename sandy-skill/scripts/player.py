@@ -276,6 +276,10 @@ class ScenarioPlayer:
                 print(f"    params: {json.dumps(substituted_params, indent=2)}")
             return step_result
 
+        # Handle Sandy internal tools (no MCP call)
+        if step.tool.startswith("sandy__"):
+            return await self._execute_internal_tool(step, substituted_params, step_result)
+
         # Get retry settings
         max_retries = 1
         retry_delay = 0.5
@@ -336,6 +340,46 @@ class ScenarioPlayer:
             print(f"    result: {data_str}")
 
         return tool_result.data
+
+    async def _execute_internal_tool(
+        self,
+        step: Step,
+        params: dict[str, Any],
+        step_result: StepResult,
+    ) -> StepResult:
+        """
+        Execute Sandy internal tools (no MCP call)
+
+        Supported tools:
+        - sandy__wait: Wait for specified duration (seconds)
+        - sandy__log: Log a message (debug)
+        """
+        tool_name = step.tool.removeprefix("sandy__")
+
+        try:
+            if tool_name == "wait":
+                duration = params.get("duration", 0)
+                if self.options.debug:
+                    print(f"  [INTERNAL] wait {duration}s")
+                await asyncio.sleep(duration)
+                step_result.success = True
+                step_result.result = {"waited": duration}
+
+            elif tool_name == "log":
+                message = params.get("message", "")
+                print(f"  [LOG] {message}")
+                step_result.success = True
+                step_result.result = {"logged": message}
+
+            else:
+                step_result.success = False
+                step_result.error = f"Unknown internal tool: {step.tool}"
+
+        except Exception as e:
+            step_result.success = False
+            step_result.error = str(e)
+
+        return step_result
 
     async def _get_client(self, server_name: str) -> MCPClient:
         """Get or create MCP client for server"""
