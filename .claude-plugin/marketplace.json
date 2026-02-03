@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "sandy",
-      "source": "sandy-skill",
+      "source": {"path": "sandy-skill"},
       "description": "MCP Scenario Player - Record & Play MCP tool calls without LLM",
       "version": "1.0.0"
     }
