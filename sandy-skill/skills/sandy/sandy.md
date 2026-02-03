@@ -3,11 +3,25 @@ name: sandy
 description: MCP Scenario Player - Record & Play MCP tool calls without LLM. Supports play (execute), list (find scenarios), and new (test & record workflow) subcommands.
 allowed-tools: Bash, Read, Write, Glob
 argument-hint: <play|list|new> [options]
+disable-model-invocation: true
 ---
 
 # Sandy - MCP Scenario Player
 
 Execute, list, or record MCP scenarios without LLM inference.
+
+## Execution Flow
+
+When user invokes `/sandy $ARGUMENTS`:
+
+1. Parse `$0` (first argument) to determine subcommand
+2. Execute the appropriate workflow:
+
+| `$0` value | Action |
+|------------|--------|
+| `play` | Run scenario with `$1` as file path, `$2`-`$5` as options |
+| `list` | Find and display available scenarios |
+| `new` | Test workflow, then record as `$1` (scenario name) |
 
 ## Subcommands
 
@@ -25,9 +39,14 @@ Run MCP scenarios deterministically without LLM.
 
 ### Usage
 
+When `$0` is "play", execute:
+
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py <scenario.json> [options] --json
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py $1 $2 $3 $4 $5 --json
 ```
+
+- `$1`: scenario file path (required)
+- `$2`-`$5`: optional flags (--var, --start, --end, etc.)
 
 ### Options
 
@@ -81,17 +100,23 @@ Search for scenario files.
 
 ### Usage
 
-Search in project scenarios folder (user-created):
+When `$0` is "list", use the Glob tool to find scenarios:
 
-```bash
-find .sandy/scenarios -name "*.json" -type f 2>/dev/null
-```
+1. **Project scenarios** (user-created):
+   ```
+   Glob pattern: .sandy/scenarios/**/*.json
+   ```
 
-Search in examples folder (bundled):
+2. **Bundled examples**:
+   ```
+   Glob pattern: ${CLAUDE_PLUGIN_ROOT}/assets/examples/**/*.json
+   ```
 
-```bash
-find ${CLAUDE_PLUGIN_ROOT}/assets/examples -name "*.json" -type f 2>/dev/null
-```
+### Workflow
+
+1. Use Glob to find all `.json` files in both locations
+2. Use Read to load each scenario file
+3. Extract and display metadata
 
 ### Output Format
 
@@ -99,7 +124,7 @@ For each scenario found, show:
 - **File path**
 - **Name** (from metadata.name)
 - **Description** (from metadata.description)
-- **Step count**
+- **Step count** (length of steps array)
 
 ---
 
@@ -107,7 +132,9 @@ For each scenario found, show:
 
 Test workflows that users request or that would benefit from repeated reuse, then save the tested process as a replayable scenario.
 
-**Usage:** `/sandy new <name>` where `<name>` is the scenario identifier (used as filename and metadata name).
+### Usage
+
+When `$0` is "new", use `$1` as the scenario name (used as filename and metadata name).
 
 **Why test first?** Scenarios created without testing may not work. By executing the workflow first, you ensure the scenario is based on a verified, working process.
 
