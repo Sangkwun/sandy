@@ -1,0 +1,42 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Filesystem MCP Test",
+    "description": "Test filesystem server: write and read files",
+    "created_at": "2025-02-03T12:00:00Z"
+  },
+  "variables": {
+    "TEST_CONTENT": "Hello from Sandy!"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "tool": "mcp__filesystem__write_file",
+      "params": {
+        "path": "/private/tmp/sandy-test/test.txt",
+        "content": "{{TEST_CONTENT}}"
+      },
+      "description": "Write a test file"
+    },
+    {
+      "step": 2,
+      "id": "read",
+      "tool": "mcp__filesystem__read_file",
+      "params": {
+        "path": "/private/tmp/sandy-test/test.txt"
+      },
+      "output": {
+        "content": "$"
+      },
+      "description": "Read the test file back"
+    },
+    {
+      "step": 3,
+      "tool": "mcp__filesystem__list_directory",
+      "params": {
+        "path": "/private/tmp/sandy-test"
+      },
+      "description": "List directory contents"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "GitHub Issue to Slack",
+    "description": "Create a GitHub issue and notify Slack channel",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "sandy"
+  },
+  "variables": {
+    "REPO": "owner/repo",
+    "ISSUE_TITLE": "",
+    "ISSUE_BODY": "",
+    "SLACK_CHANNEL": "#dev"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "create_issue",
+      "tool": "mcp__github__create_issue",
+      "params": {
+        "repo": "{{REPO}}",
+        "title": "{{ISSUE_TITLE}}",
+        "body": "{{ISSUE_BODY}}"
+      },
+      "output": {
+        "number": "$.number",
+        "url": "$.html_url",
+        "title": "$.title"
+      },
+      "description": "Create GitHub issue",
+      "on_error": "stop"
+    },
+    {
+      "step": 2,
+      "tool": "mcp__slack__post_message",
+      "params": {
+        "channel": "{{SLACK_CHANNEL}}",
+        "text": ":github: New issue created!\n*#{{create_issue.number}}* {{create_issue.title}}\n{{create_issue.url}}"
+      },
+      "description": "Notify Slack channel",
+      "on_error": "skip"
+    }
+  ]
+}

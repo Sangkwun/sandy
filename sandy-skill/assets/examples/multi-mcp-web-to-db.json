@@ -1,0 +1,56 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Web Scrape to Database",
+    "description": "Scrape web page data and store in Supabase",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "sandy"
+  },
+  "variables": {
+    "TARGET_URL": "https://news.ycombinator.com"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "tool": "mcp__chrome-devtools__navigate_page",
+      "params": {
+        "url": "{{TARGET_URL}}"
+      },
+      "description": "Navigate to target page",
+      "wait_after": 2.0
+    },
+    {
+      "step": 2,
+      "id": "snapshot",
+      "tool": "mcp__chrome-devtools__take_snapshot",
+      "params": {},
+      "output": {
+        "content": "$"
+      },
+      "description": "Capture page content"
+    },
+    {
+      "step": 3,
+      "id": "screenshot",
+      "tool": "mcp__chrome-devtools__take_screenshot",
+      "params": {
+        "filePath": "/tmp/scrape_screenshot.png"
+      },
+      "output": {
+        "path": "$"
+      },
+      "description": "Take screenshot for archive"
+    },
+    {
+      "step": 4,
+      "tool": "mcp__supabase__query",
+      "params": {
+        "sql": "INSERT INTO scrape_logs (url, scraped_at, screenshot_path) VALUES ('{{TARGET_URL}}', NOW(), '{{screenshot.path}}') RETURNING id"
+      },
+      "output": {
+        "log_id": "$[0].id"
+      },
+      "description": "Log scrape to database"
+    }
+  ]
+}

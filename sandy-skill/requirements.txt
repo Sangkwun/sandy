@@ -1,0 +1,13 @@
+# Sandy Play Dependencies
+
+# MCP Python SDK for stdio/SSE/WebSocket transport
+mcp>=1.0.0
+
+# WebSocket support for MCP
+websockets>=12.0
+
+# JSONPath for output extraction
+jsonpath-ng>=1.6.0
+
+# Environment variable loading
+python-dotenv>=1.0.0

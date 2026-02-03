@@ -1,0 +1,37 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Chrome DevTools Test",
+    "description": "Test Chrome DevTools MCP via Sandy"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "pages",
+      "tool": "mcp__chrome-devtools__list_pages",
+      "params": {},
+      "output": {
+        "pages": "$"
+      },
+      "description": "List browser pages"
+    },
+    {
+      "step": 2,
+      "tool": "mcp__chrome-devtools__navigate_page",
+      "params": {
+        "url": "https://example.com"
+      },
+      "description": "Navigate to example.com"
+    },
+    {
+      "step": 3,
+      "id": "snapshot",
+      "tool": "mcp__chrome-devtools__take_snapshot",
+      "params": {},
+      "output": {
+        "content": "$"
+      },
+      "description": "Take page snapshot"
+    }
+  ]
+}

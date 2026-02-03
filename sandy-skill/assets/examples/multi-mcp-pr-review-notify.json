@@ -1,0 +1,55 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "PR Review Workflow",
+    "description": "Get PR details, add review comment, and notify on Slack",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "sandy"
+  },
+  "variables": {
+    "REPO": "",
+    "PR_NUMBER": "",
+    "SLACK_CHANNEL": "#code-review"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "pr_info",
+      "tool": "mcp__github__get_pull_request",
+      "params": {
+        "repo": "{{REPO}}",
+        "pull_number": "{{PR_NUMBER}}"
+      },
+      "output": {
+        "title": "$.title",
+        "author": "$.user.login",
+        "url": "$.html_url",
+        "additions": "$.additions",
+        "deletions": "$.deletions",
+        "files_changed": "$.changed_files"
+      },
+      "description": "Get PR details"
+    },
+    {
+      "step": 2,
+      "tool": "mcp__github__create_pull_request_review",
+      "params": {
+        "repo": "{{REPO}}",
+        "pull_number": "{{PR_NUMBER}}",
+        "event": "COMMENT",
+        "body": "Automated review triggered. Stats: +{{pr_info.additions}}/-{{pr_info.deletions}} across {{pr_info.files_changed}} files."
+      },
+      "description": "Add review comment",
+      "on_error": "skip"
+    },
+    {
+      "step": 3,
+      "tool": "mcp__slack__post_message",
+      "params": {
+        "channel": "{{SLACK_CHANNEL}}",
+        "text": ":eyes: *PR Ready for Review*\n\n*{{pr_info.title}}*\nAuthor: {{pr_info.author}}\nChanges: +{{pr_info.additions}}/-{{pr_info.deletions}} ({{pr_info.files_changed}} files)\n\n{{pr_info.url}}"
+      },
+      "description": "Notify Slack"
+    }
+  ]
+}

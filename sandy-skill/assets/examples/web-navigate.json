@@ -1,0 +1,46 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Web Navigation Example",
+    "description": "Navigate to a URL and take a screenshot",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "sandy"
+  },
+  "variables": {
+    "URL": "https://example.com"
+  },
+  "environment": {
+    "mcp": "chrome-devtools",
+    "viewport": { "width": 1280, "height": 720 }
+  },
+  "steps": [
+    {
+      "step": 1,
+      "tool": "mcp__chrome-devtools__navigate_page",
+      "params": {
+        "type": "url",
+        "url": "{{URL}}"
+      },
+      "description": "Navigate to target URL",
+      "wait_after": 2.0
+    },
+    {
+      "step": 2,
+      "id": "snapshot",
+      "tool": "mcp__chrome-devtools__take_snapshot",
+      "params": {},
+      "output": {
+        "content": "$"
+      },
+      "description": "Take accessibility snapshot"
+    },
+    {
+      "step": 3,
+      "tool": "mcp__chrome-devtools__take_screenshot",
+      "params": {
+        "fullPage": false
+      },
+      "description": "Take screenshot of viewport"
+    }
+  ]
+}

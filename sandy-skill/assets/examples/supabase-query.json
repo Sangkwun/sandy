@@ -1,0 +1,40 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Supabase Query Example",
+    "description": "Query users from Supabase and extract results",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "sandy"
+  },
+  "variables": {
+    "LIMIT": "10"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "user_query",
+      "tool": "mcp__supabase__query",
+      "params": {
+        "sql": "SELECT id, email, created_at FROM auth.users ORDER BY created_at DESC LIMIT {{LIMIT}}"
+      },
+      "output": {
+        "users": "$",
+        "first_user_id": "$[0].id",
+        "first_user_email": "$[0].email"
+      },
+      "description": "Query recent users from Supabase"
+    },
+    {
+      "step": 2,
+      "id": "count_query",
+      "tool": "mcp__supabase__query",
+      "params": {
+        "sql": "SELECT COUNT(*) as total FROM auth.users"
+      },
+      "output": {
+        "total": "$[0].total"
+      },
+      "description": "Count total users"
+    }
+  ]
+}

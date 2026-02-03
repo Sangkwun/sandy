@@ -1,0 +1,11 @@
+{
+  "name": "sandy",
+  "description": "MCP Scenario Player - Record & Play MCP tool calls without LLM (deterministic replay, zero token cost)",
+  "version": "1.0.0",
+  "author": {
+    "name": "sangkwun"
+  },
+  "repository": "https://github.com/sangkwun/sandy-skill",
+  "license": "MIT",
+  "keywords": ["mcp", "automation", "scenario", "replay", "deterministic"]
+}

@@ -1,0 +1,108 @@
+{
+  "version": "1.1",
+  "metadata": {
+    "name": "템플릿 목록 순회 테스트",
+    "description": "템플릿 카드 클릭 후 뒤로가기로 순회하는 테스트",
+    "created_at": "2025-02-03T14:00:00Z",
+    "created_by": "luftplay-recorder",
+    "target_url": "http://localhost:3000/template",
+    "instruction": "템플릿 버튼 클릭 → 뒤로가기 반복"
+  },
+  "environment": {
+    "mcp": "claude-in-chrome",
+    "viewport": { "width": 1470, "height": 750 },
+    "recorded_at": "2025-02-03T14:00:00Z"
+  },
+  "variables": {},
+  "steps": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/template" },
+      "description": "템플릿 목록 페이지 접속"
+    },
+    {
+      "step": 2,
+      "action": "wait",
+      "params": { "duration": 2 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "params": { "ref": "ref_57" },
+      "ref_hint": "AI Tech Trend 템플릿 카드",
+      "description": "첫 번째 템플릿 클릭"
+    },
+    {
+      "step": 4,
+      "action": "wait",
+      "params": { "duration": 2 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 5,
+      "action": "navigate",
+      "params": { "url": "back" },
+      "description": "뒤로가기"
+    },
+    {
+      "step": 6,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 7,
+      "action": "click",
+      "params": { "ref": "ref_94" },
+      "ref_hint": "YouTube Channel Digest 템플릿 카드",
+      "description": "두 번째 템플릿 클릭"
+    },
+    {
+      "step": 8,
+      "action": "wait",
+      "params": { "duration": 2 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 9,
+      "action": "navigate",
+      "params": { "url": "back" },
+      "description": "뒤로가기"
+    },
+    {
+      "step": 10,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 11,
+      "action": "click",
+      "params": { "ref": "ref_106" },
+      "ref_hint": "Curated Newsletter 템플릿 카드",
+      "description": "세 번째 템플릿 클릭"
+    },
+    {
+      "step": 12,
+      "action": "wait",
+      "params": { "duration": 2 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 13,
+      "action": "navigate",
+      "params": { "url": "back" },
+      "description": "뒤로가기"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "url_contains",
+      "value": "/template",
+      "step_after": 13,
+      "timeout": 5000
+    }
+  ]
+}

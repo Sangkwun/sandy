@@ -1,0 +1,49 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Daily Database Report to Slack",
+    "description": "Query database stats and post summary to Slack",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "sandy"
+  },
+  "variables": {
+    "SLACK_CHANNEL": "#reports"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "user_stats",
+      "tool": "mcp__supabase__query",
+      "params": {
+        "sql": "SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as new_today FROM auth.users"
+      },
+      "output": {
+        "total_users": "$[0].total",
+        "new_users": "$[0].new_today"
+      },
+      "description": "Get user statistics"
+    },
+    {
+      "step": 2,
+      "id": "order_stats",
+      "tool": "mcp__supabase__query",
+      "params": {
+        "sql": "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as revenue FROM orders WHERE created_at > NOW() - INTERVAL '24 hours'"
+      },
+      "output": {
+        "order_count": "$[0].count",
+        "revenue": "$[0].revenue"
+      },
+      "description": "Get order statistics"
+    },
+    {
+      "step": 3,
+      "tool": "mcp__slack__post_message",
+      "params": {
+        "channel": "{{SLACK_CHANNEL}}",
+        "text": ":chart_with_upwards_trend: *Daily Report*\n\n*Users*\n- Total: {{user_stats.total_users}}\n- New today: {{user_stats.new_users}}\n\n*Orders (24h)*\n- Count: {{order_stats.order_count}}\n- Revenue: ${{order_stats.revenue}}"
+      },
+      "description": "Post report to Slack"
+    }
+  ]
+}

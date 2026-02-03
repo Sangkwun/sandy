@@ -1,0 +1,15 @@
+{
+  "name": "sandy-plugins",
+  "owner": {
+    "name": "sangkwun",
+    "email": "sangkwun@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "sandy",
+      "source": ".",
+      "description": "MCP Scenario Player - Record & Play MCP tool calls without LLM",
+      "version": "1.0.0"
+    }
+  ]
+}

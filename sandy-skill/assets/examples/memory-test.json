@@ -1,0 +1,43 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Knowledge Graph MCP Test",
+    "description": "Test memory (knowledge graph) server: create and query entities",
+    "created_at": "2025-02-03T12:00:00Z"
+  },
+  "variables": {},
+  "steps": [
+    {
+      "step": 1,
+      "tool": "mcp__memory__create_entities",
+      "params": {
+        "entities": [
+          {
+            "name": "Sandy",
+            "entityType": "Project",
+            "observations": ["A Sandevistan for your AI Agent", "MCP Tool Record/Play"]
+          }
+        ]
+      },
+      "description": "Create an entity in knowledge graph"
+    },
+    {
+      "step": 2,
+      "id": "search",
+      "tool": "mcp__memory__search_nodes",
+      "params": {
+        "query": "Sandy"
+      },
+      "output": {
+        "results": "$"
+      },
+      "description": "Search for the created entity"
+    },
+    {
+      "step": 3,
+      "tool": "mcp__memory__read_graph",
+      "params": {},
+      "description": "Read the entire graph"
+    }
+  ]
+}

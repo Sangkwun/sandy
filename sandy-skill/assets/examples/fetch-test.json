@@ -1,0 +1,25 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Fetch MCP Test",
+    "description": "Test fetch server: make HTTP requests",
+    "created_at": "2025-02-03T12:00:00Z"
+  },
+  "variables": {
+    "URL": "https://httpbin.org/json"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "fetch_json",
+      "tool": "mcp__fetch__fetch",
+      "params": {
+        "url": "{{URL}}"
+      },
+      "output": {
+        "content": "$"
+      },
+      "description": "Fetch JSON from httpbin"
+    }
+  ]
+}

@@ -1,0 +1,249 @@
+{
+  "version": "1.1",
+  "metadata": {
+    "name": "Template 목록 탐색 테스트",
+    "description": "localhost:3000/template의 모든 템플릿 페이지 방문 테스트",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "luftplay-recorder",
+    "target_url": "http://localhost:3000/template",
+    "instruction": "템플릿 목록의 모든 항목을 들어가보는 테스트"
+  },
+  "environment": {
+    "mcp": "claude-in-chrome",
+    "viewport": { "width": 1280, "height": 720 },
+    "recorded_at": "2025-02-03T12:00:00Z"
+  },
+  "variables": {},
+  "steps": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/template" },
+      "description": "템플릿 목록 페이지 접속"
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/ai-tech-trend" },
+      "description": "AI Tech Trend 템플릿 방문"
+    },
+    {
+      "step": 3,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 4,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/youtube-channel-digest" },
+      "description": "YouTube Channel Digest 템플릿 방문"
+    },
+    {
+      "step": 5,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 6,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/curated-newsletter" },
+      "description": "Curated Newsletter 템플릿 방문"
+    },
+    {
+      "step": 7,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 8,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/hacker-news-digest" },
+      "description": "Hacker News Digest 템플릿 방문"
+    },
+    {
+      "step": 9,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 10,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/news-balance" },
+      "description": "News Balance 템플릿 방문"
+    },
+    {
+      "step": 11,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 12,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/x-influencer-insight" },
+      "description": "X Influencer Insight 템플릿 방문"
+    },
+    {
+      "step": 13,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 14,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/product-hunt" },
+      "description": "Product Hunt 템플릿 방문"
+    },
+    {
+      "step": 15,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 16,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/competitor-tracker" },
+      "description": "Competitor Tracker 템플릿 방문"
+    },
+    {
+      "step": 17,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 18,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/reddit-opportunity" },
+      "description": "Reddit Opportunity 템플릿 방문"
+    },
+    {
+      "step": 19,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 20,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/youtube-keyword-trend" },
+      "description": "YouTube Keyword Trend 템플릿 방문"
+    },
+    {
+      "step": 21,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 22,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/community-content-ideas" },
+      "description": "Community Content Ideas 템플릿 방문"
+    },
+    {
+      "step": 23,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 24,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/building-in-public" },
+      "description": "Building in Public 템플릿 방문"
+    },
+    {
+      "step": 25,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 26,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/youtube-to-blog" },
+      "description": "YouTube to Blog 템플릿 방문"
+    },
+    {
+      "step": 27,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 28,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/longform-to-shortform" },
+      "description": "Longform to Shortform 템플릿 방문"
+    },
+    {
+      "step": 29,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 30,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/cs-digest" },
+      "description": "CS Digest 템플릿 방문"
+    },
+    {
+      "step": 31,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 32,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/decision-log" },
+      "description": "Decision Log 템플릿 방문"
+    },
+    {
+      "step": 33,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 34,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/standup-summary" },
+      "description": "Standup Summary 템플릿 방문"
+    },
+    {
+      "step": 35,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    },
+    {
+      "step": 36,
+      "action": "navigate",
+      "params": { "url": "http://localhost:3000/en/template/weekly-digest" },
+      "description": "Weekly Digest 템플릿 방문"
+    },
+    {
+      "step": 37,
+      "action": "wait",
+      "params": { "duration": 1 },
+      "description": "페이지 로딩 대기"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "url_contains",
+      "value": "/en/template/weekly-digest",
+      "step_after": 37,
+      "timeout": 5000
+    }
+  ]
+}

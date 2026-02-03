@@ -1,0 +1,71 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Form Submission with Logging",
+    "description": "Fill and submit a web form, then log result to database",
+    "created_at": "2025-02-03T12:00:00Z",
+    "created_by": "sandy"
+  },
+  "variables": {
+    "FORM_URL": "",
+    "USER_EMAIL": "",
+    "USER_NAME": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "tool": "mcp__chrome-devtools__navigate_page",
+      "params": {
+        "url": "{{FORM_URL}}"
+      },
+      "description": "Navigate to form page",
+      "wait_after": 1.5
+    },
+    {
+      "step": 2,
+      "id": "page",
+      "tool": "mcp__chrome-devtools__take_snapshot",
+      "params": {},
+      "output": {
+        "snapshot": "$"
+      },
+      "description": "Capture page state"
+    },
+    {
+      "step": 3,
+      "tool": "mcp__chrome-devtools__fill_form",
+      "params": {
+        "elements": [
+          { "uid": "email-input", "value": "{{USER_EMAIL}}" },
+          { "uid": "name-input", "value": "{{USER_NAME}}" }
+        ]
+      },
+      "description": "Fill form fields"
+    },
+    {
+      "step": 4,
+      "tool": "mcp__chrome-devtools__click",
+      "params": {
+        "uid": "submit-button"
+      },
+      "description": "Submit form",
+      "wait_after": 2.0
+    },
+    {
+      "step": 5,
+      "tool": "mcp__chrome-devtools__take_screenshot",
+      "params": {
+        "filePath": "/tmp/form_result.png"
+      },
+      "description": "Capture result page"
+    },
+    {
+      "step": 6,
+      "tool": "mcp__supabase__query",
+      "params": {
+        "sql": "INSERT INTO form_submissions (email, name, submitted_at, form_url) VALUES ('{{USER_EMAIL}}', '{{USER_NAME}}', NOW(), '{{FORM_URL}}')"
+      },
+      "description": "Log submission to database"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "Claude in Chrome Test",
+    "description": "Test Claude in Chrome MCP via Sandy (requires Claude Code --chrome mode)"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "tabs",
+      "tool": "mcp__claude-in-chrome__tabs_context_mcp",
+      "params": {
+        "createIfEmpty": true
+      },
+      "output": {
+        "firstTabId": "$.availableTabs[0].tabId"
+      },
+      "description": "Get browser tab context"
+    },
+    {
+      "step": 2,
+      "tool": "mcp__claude-in-chrome__navigate",
+      "params": {
+        "url": "https://example.com",
+        "tabId": "{{tabs.firstTabId}}"
+      },
+      "description": "Navigate to example.com"
+    },
+    {
+      "step": 3,
+      "id": "page",
+      "tool": "mcp__claude-in-chrome__read_page",
+      "params": {
+        "tabId": "{{tabs.firstTabId}}",
+        "depth": 5
+      },
+      "output": {
+        "content": "$"
+      },
+      "description": "Read page accessibility tree"
+    }
+  ]
+}
