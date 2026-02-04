@@ -2,12 +2,18 @@
 
 ## Project Overview
 
-Sandy is a **deterministic workflow automation tool** that records and replays MCP (Model Context Protocol) tool call sequences. It replays exact tool calls without LLM inference, significantly reducing token costs and latency.
+Sandy is a **deterministic workflow accelerator** for AI agents. Agents create MCP tool call sequences as scenarios, then replay them without LLM inference—saving tokens and time.
 
 **Core Value:**
 - Deterministic replay of MCP tool calls without LLM
 - Reduced token costs for repetitive tasks
 - Ideal for CI/CD pipelines and regression testing
+
+**How Agents Use Sandy:**
+1. Execute a workflow using MCP tools
+2. Identify it as repeatable
+3. Write the tool sequence as a scenario JSON
+4. Replay via Sandy on future requests
 
 ## Tech Stack
 
@@ -162,3 +168,4 @@ v1.1 scenarios (using `action` field) are automatically converted to v2.1.
 - Update `references/schema.md` when changing scenario schema
 - Update `plugin.json` when changing plugin version
 - Example scenarios are located in `assets/examples/`
+- Scenario storage location: `.sandy/scenarios/` (project-local)
