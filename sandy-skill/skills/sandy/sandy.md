@@ -1,277 +1,182 @@
 ---
 name: sandy
-description: MCP Scenario Player - Record & Play MCP tool calls without LLM. Supports play (execute), list (find scenarios), and new (test & record workflow) subcommands.
+description: Deterministic MCP scenario replay - Agent creates and reuses MCP tool call sequences without LLM inference.
 allowed-tools: Bash, Read, Write, Glob
-argument-hint: <play|list|new> [options]
-disable-model-invocation: true
 ---
 
-# Sandy - MCP Scenario Player
+# Sandy - Deterministic MCP Scenario Replay
 
-Execute, list, or record MCP scenarios without LLM inference.
+Sandy replays MCP tool call sequences without LLM inference. When you identify a repeatable workflow, create a scenario to accelerate future executions.
 
-## Execution Flow
+## Why Sandy
 
-When user invokes `/sandy $ARGUMENTS`:
-
-1. Parse `$0` (first argument) to determine subcommand
-2. Execute the appropriate workflow:
-
-| `$0` value | Action |
-|------------|--------|
-| `play` | Run scenario with `$1` as file path, `$2`-`$5` as options |
-| `list` | Find and display available scenarios |
-| `new` | Test workflow, then record as `$1` (scenario name) |
-
-## Subcommands
-
-| Command | Description |
+| Benefit | Description |
 |---------|-------------|
-| `play <scenario.json>` | Execute a scenario |
-| `list` | Find available scenarios |
-| `new <name>` | Test & record a workflow as scenario |
+| **Token cost** | Zero LLM tokens for replay |
+| **Speed** | Direct MCP calls, no reasoning overhead |
+| **Consistency** | Identical execution every time |
 
----
+### When NOT to Use
 
-## play - Execute Scenario
+- One-time operations
+- Tasks requiring dynamic decision-making
+- Exploratory workflows
 
-Run MCP scenarios deterministically without LLM.
+## When to Save a Scenario
 
-### Usage
+Save when **any** of these apply:
 
-When `$0` is "play", construct and execute the command:
+- Same MCP tool sequence used 2+ times
+- User mentions "repeat", "daily", "automate"
+- Clear workflow pattern emerges (navigate → scrape → save)
 
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py <scenario_path> [options] --json
-```
+### Variables to Extract
 
-Build the command by including all provided arguments. The `--json` flag should always be at the end.
+When saving, parameterize:
 
-### Options
+| Type | Example | Variable |
+|------|---------|----------|
+| User inputs | Issue title, search terms | `{{TITLE}}` |
+| Identifiers | Repo name, PR number | `{{REPO}}`, `{{PR_NUMBER}}` |
+| URLs | Target pages | `{{TARGET_URL}}` |
+| Output paths | File destinations | `{{OUTPUT_PATH}}` |
 
-| Option | Description |
-|--------|-------------|
-| `--start N` | Start from step N (inclusive) |
-| `--end N` | End at step N (inclusive) |
-| `--var KEY=VALUE` | Set variable (repeatable) |
-| `--env FILE` | Load variables from .env file |
-| `--dry-run` | Validate without executing |
-| `--debug` | Enable debug output |
-| `--json` | Output result as JSON |
+## Finding Existing Scenarios
 
-### Examples
+**Location**: `.sandy/scenarios/` (project-local)
 
-```bash
-/sandy play scenario.json
-/sandy play scenario.json --var TITLE="Bug Fix" --var REPO="org/repo"
-/sandy play scenario.json --start 2 --end 4
-/sandy play scenario.json --dry-run
-```
+**Search workflow**:
 
-### Result Interpretation
-
-**Success:**
-```json
-{
-  "success": true,
-  "passed_steps": 3,
-  "total_steps": 3,
-  "outputs": { "step_id": { "field": "value" } }
-}
-```
-
-**Failure:**
-```json
-{
-  "success": false,
-  "failed_step": 2,
-  "error": "Connection refused"
-}
-```
-
-Recovery: `/sandy play scenario.json --start <failed_step>`
-
----
-
-## list - Find Scenarios
-
-Search for scenario files.
-
-### Usage
-
-When `$0` is "list", use the Glob tool to find scenarios:
-
-1. **Project scenarios** (user-created):
+1. Use Glob to find scenarios:
    ```
    Glob pattern: .sandy/scenarios/**/*.json
    ```
 
-2. **Bundled examples**:
-   ```
-   Glob pattern: ${CLAUDE_PLUGIN_ROOT}/assets/examples/**/*.json
-   ```
+2. Read each file and check:
+   - `metadata.name` - Scenario name
+   - `metadata.description` - What it does
+   - `steps` - MCP tool sequence
+
+3. Match against current task requirements
+
+**Bundled examples**: `${CLAUDE_PLUGIN_ROOT}/assets/examples/`
+
+## Creating Scenarios
 
 ### Workflow
 
-1. Use Glob to find all `.json` files in both locations
-2. Use Read to load each scenario file
-3. Extract and display metadata
+1. **Execute** - Perform the workflow using actual MCP tools
+2. **Track** - Note which tools were called and with what parameters
+3. **Parameterize** - Identify values that should become variables
+4. **Write** - Create scenario JSON based on the executed workflow
+5. **Save** - Write to `.sandy/scenarios/<name>.json`
+6. **Verify** - Run with `--dry-run` to validate
 
-### Output Format
+**Important**: Always test the workflow first before writing the scenario.
 
-For each scenario found, show:
-- **File path**
-- **Name** (from metadata.name)
-- **Description** (from metadata.description)
-- **Step count** (length of steps array)
-
----
-
-## new - Test & Record Scenario
-
-Test workflows that users request or that would benefit from repeated reuse, then save the tested process as a replayable scenario.
-
-### Usage
-
-When `$0` is "new", use `$1` as the scenario name (used as filename and metadata name).
-
-If `$1` is empty, ask the user for a scenario name before proceeding.
-
-**Why test first?** Scenarios created without testing may not work. By executing the workflow first, you ensure the scenario is based on a verified, working process.
-
-### When to Use
-
-- User explicitly requests automation (`/sandy new`)
-- A workflow will be repeated multiple times
-- Consistent, deterministic execution is needed
-- Reducing LLM inference costs for repetitive tasks
-
-### Instructions
-
-**CRITICAL: You MUST test the workflow first, then create the scenario from the tested process.**
-
-1. **Understand** - Ask user what workflow they want to automate
-2. **Test** - Execute the workflow by actually performing the requested task
-3. **Record** - Track all MCP tool calls made during the test:
-   - Tool name (e.g., `mcp__chrome-devtools__click`)
-   - Parameters used
-   - Results received
-4. **Parameterize** - Identify values that should become variables:
-   - User inputs (names, IDs, search terms)
-   - Environment-specific values (URLs, paths)
-   - Data that changes between runs
-5. **Generate** - Create scenario JSON from the recorded process
-6. **Save** - Write to `.sandy/scenarios/<name>.json` in the current project (create directories if needed)
-7. **Verify** - Suggest `/sandy play .sandy/scenarios/<name>.json --dry-run`
-
-**DO NOT** write scenarios without first testing the workflow. The scenario must reflect actual, verified tool calls.
-
-### Scenario Schema (v2.1)
+### Minimal Schema
 
 ```json
 {
   "version": "2.1",
-  "metadata": {
-    "name": "Scenario Name",
-    "description": "What this scenario does"
-  },
-  "variables": {
-    "VAR_NAME": "default_value"
-  },
+  "metadata": { "name": "...", "description": "..." },
+  "variables": { "VAR_NAME": "default" },
   "steps": [
     {
       "step": 1,
-      "id": "unique_step_id",
-      "tool": "mcp__server__tool_name",
-      "params": {
-        "param1": "{{VAR_NAME}}"
-      },
-      "output": {
-        "extracted_field": "$.json.path"
-      }
+      "id": "unique_id",
+      "tool": "mcp__server__tool",
+      "params": { "key": "{{VAR_NAME}}" },
+      "output": { "field": "$.json.path" }
     }
   ]
 }
 ```
 
-### Step Fields
+**Full schema**: See `${CLAUDE_PLUGIN_ROOT}/references/schema.md`
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `step` | Yes | Step number (1, 2, 3...) |
-| `tool` | Yes | MCP tool: `mcp__server__tool` |
-| `params` | Yes | Tool parameters |
-| `id` | No | ID for output reference |
-| `output` | No | JSONPath extractions |
-| `on_error` | No | `stop`, `skip`, `retry` |
+### Tool Naming
 
-### Variable Substitution
+Format: `mcp__<server>__<tool_name>`
 
-| Syntax | Description |
+Examples:
+- `mcp__github__create_issue`
+- `mcp__chrome-devtools__click`
+- `mcp__supabase__query`
+
+## Executing Scenarios
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py <scenario.json> [options] --json
+```
+
+### Options
+
+| Option | Description |
 |--------|-------------|
-| `{{VAR}}` | Static variable |
-| `{{step_id.field}}` | Previous step output |
+| `--start N` | Start from step N |
+| `--end N` | End at step N |
+| `--var KEY=VALUE` | Set variable (repeatable) |
+| `--env FILE` | Load variables from .env |
+| `--dry-run` | Validate without executing |
+| `--debug` | Enable debug output |
+| `--json` | Output as JSON |
 
-### Sandy Internal Tools
+### Partial Execution
 
-Sandy provides built-in tools that don't require MCP calls.
+Run only specific steps when reusing part of a workflow:
 
-| Tool | Params | Description |
-|------|--------|-------------|
-| `sandy__wait` | `duration` | Wait for specified duration (no timeout limit) |
-| `sandy__log` | `message` | Log a message (always printed) |
-| `sandy__append_file` | `path`, `format`, `data` | Append data to file (jsonl/csv/json) |
-| `sandy__wait_for_element` | `selector`, `timeout`, `interval` | Wait for CSS selector to appear |
-| `sandy__wait_until` | `expression`, `timeout`, `interval` | Wait for JS expression to be true |
-
-**Example - Long wait:**
-```json
-{ "tool": "sandy__wait", "params": { "duration": 90 } }
+```bash
+# Steps 1-3 only (e.g., navigate and scrape, skip save)
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/play.py scenario.json --start 1 --end 3 --json
 ```
 
-**Example - Save scraped data:**
+## Error Handling
+
+### Result Interpretation
+
+**Success**:
 ```json
-{
-  "tool": "sandy__append_file",
-  "params": { "path": "{{OUTPUT_PATH}}", "format": "jsonl", "data": "{{scrape.items}}" }
-}
+{ "success": true, "passed_steps": 3, "total_steps": 3 }
 ```
 
-**Example - Wait for element:**
+**Failure**:
 ```json
-{ "tool": "sandy__wait_for_element", "params": { "selector": "button.submit", "timeout": 10 } }
+{ "success": false, "failed_step": 2, "error": "Element not found" }
 ```
 
-**Example - Wait for condition:**
-```json
-{ "tool": "sandy__wait_until", "params": { "expression": "document.querySelector('.loading') === null", "timeout": 30 } }
-```
+### Recovery Strategy
 
-**append_file formats:** `jsonl` (default), `csv`, `json`
+1. Analyze error (MCP response + step context)
+2. Determine cause:
+   - Transient: Retry with `--start <failed_step>`
+   - Structural: Page/API changed, scenario needs update
+3. Fix and re-run, or report to user
 
-**Why use internal tools?**
-- `sandy__wait`: No MCP timeout limit (MCP ~30s limit)
-- `sandy__wait_for_element/until`: Cleaner than JS retry loops
-- `sandy__append_file`: No filesystem MCP setup needed
+### Per-Step Error Modes
 
----
+| Mode | Behavior |
+|------|----------|
+| `"stop"` | Stop execution (default) |
+| `"skip"` | Continue to next step |
+| `"retry"` | Retry with exponential backoff |
 
-## Scenario Locations
+## Sandy Built-in Tools
 
-| Location | Description |
-|----------|-------------|
-| `.sandy/scenarios/` | Project-local scenarios (user-created) |
-| `${CLAUDE_PLUGIN_ROOT}/assets/examples/` | Bundled examples |
+Tools with `sandy__` prefix don't require MCP servers.
 
-### Bundled Examples
+| Tool | Purpose |
+|------|---------|
+| `sandy__wait` | Wait for duration (no MCP timeout limit) |
+| `sandy__log` | Log message to output |
+| `sandy__append_file` | Save data to file (jsonl/csv/json) |
+| `sandy__wait_for_element` | Wait for CSS selector |
+| `sandy__wait_until` | Wait for JS expression to be true |
 
-- `supabase-query.json` - Database query
-- `multi-mcp-github-slack.json` - GitHub to Slack
-- `multi-mcp-web-to-db.json` - Web scraping to DB
+**Details**: See `${CLAUDE_PLUGIN_ROOT}/references/schema.md#sandy-internal-tools`
 
-### Note
+## Reference
 
-User-created scenarios are stored in the project directory (`.sandy/scenarios/`), not in the plugin folder. This ensures scenarios are:
-- Version controlled with the project
-- Not lost during plugin updates
-- Shareable with team members
+- **Schema**: `${CLAUDE_PLUGIN_ROOT}/references/schema.md`
+- **Examples**: `${CLAUDE_PLUGIN_ROOT}/assets/examples/`
+- **Scenario storage**: `.sandy/scenarios/` (project-local)

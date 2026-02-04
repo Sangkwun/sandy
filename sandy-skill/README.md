@@ -1,150 +1,118 @@
 # Sandy
 
-> A Sandevistan for your AI Agent - Record & Play MCP Tool calls
+> A Sandevistan for your AI Agent
 
-Sandy accelerates AI agents by recording MCP tool call sequences and replaying them without LLM inference. Think of it as a "macro recorder" for AI actions.
+Sandy makes AI agents faster by letting them create and reuse MCP tool call sequences. Once a workflow is saved as a scenario, it replays without LLM inference—saving tokens and time.
 
-## Why Sandy?
+## What is Sandy?
+
+Sandy is a **workflow accelerator** for AI agents. When an agent identifies a repeatable workflow, Sandy can:
+
+1. **Store** the tool call sequence as a scenario
+2. **Parameterize** variable parts (URLs, IDs, search terms)
+3. **Replay** the exact sequence without LLM reasoning
 
 | Without Sandy | With Sandy |
 |---------------|------------|
 | LLM inference every time | Record once, replay infinitely |
-| Token costs per execution | Zero cost replay |
+| Token costs per execution | Zero-cost replay |
 | Variable timing | Deterministic execution |
-| Requires AI reasoning | Direct MCP calls |
 
-Sandy is ideal for:
-- Repetitive automation tasks
-- CI/CD pipelines
-- Regression testing
-- Cost-sensitive operations
+## How Agents Use Sandy
+
+**Create scenarios**: When an agent completes a repeatable workflow, it writes the MCP tool sequence as a scenario JSON file.
+
+**Reuse scenarios**: On similar requests, the agent finds existing scenarios and replays them instead of reasoning through the steps again.
+
+**Judgment**: The agent decides when a workflow is worth saving and when to reuse existing scenarios.
+
+### Example Flow
+
+```
+User: "Scrape HN top stories and save to database"
+
+Agent (first time):
+  1. Executes workflow: navigate → scrape → insert
+  2. Recognizes pattern as reusable
+  3. Writes scenario to .sandy/scenarios/hn-scrape-to-db.json
+
+User: "Scrape HN again"
+
+Agent (subsequent):
+  1. Finds matching scenario
+  2. Replays via Sandy
+  3. Done—no LLM inference needed
+```
 
 ## Demo
 
-[![Sandy Demo](https://img.youtube.com/vi/nSKs8sy7o2c/maxresdefault.jpg)](https://www.youtube.com/watch?v=nSKs8sy7o2c)
+Watch what Sandy does and how it works:
+
+[![Sandy Demo](https://img.youtube.com/vi/owgyGYL4SVs/hqdefault.jpg)](https://www.youtube.com/watch?v=owgyGYL4SVs)
 
 ## Installation
 
-### As Claude Code Plugin (Recommended)
+### As Claude Code Plugin
 
 ```shell
-# Add marketplace
 /plugin marketplace add sangkwun/sandy-skill
-
-# Install plugin
 /plugin install sandy@sangkwun-sandy-skill
 ```
 
-Then use:
-```shell
-/sandy:play scenario.json
-/sandy:play scenario.json --var TITLE="Bug Fix"
-/sandy:play scenario.json --start 2 --end 4
-```
+**That's it.** Once installed, the agent can:
+- Identify repeatable workflows
+- Write them as scenario files
+- Replay them without LLM inference
 
 ### As Standalone CLI
 
 ```bash
-# Install dependencies
 pip install mcp jsonpath-ng python-dotenv
-
-# Run directly
 python scripts/play.py scenario.json --json
 ```
 
-## Quick Start
+## Scenario Format
 
-### 1. Create a scenario
+Scenarios are JSON files defining MCP tool sequences:
 
 ```json
 {
   "version": "2.1",
   "metadata": { "name": "Query Database" },
+  "variables": { "LIMIT": "5" },
   "steps": [
     {
       "step": 1,
-      "id": "query",
       "tool": "mcp__supabase__query",
-      "params": { "sql": "SELECT * FROM users LIMIT 5" },
-      "output": { "users": "$" }
+      "params": { "sql": "SELECT * FROM users LIMIT {{LIMIT}}" }
     }
   ]
 }
 ```
 
-### 2. Run it
+**Full schema**: See [references/schema.md](references/schema.md)
 
-```shell
-/sandy:play scenarios/my-scenario.json
-```
+## Supported Transports
 
-Or via CLI:
-```bash
-python scripts/play.py scenarios/my-scenario.json --json
-```
+| Config | Transport |
+|--------|-----------|
+| `command: ...` | stdio (spawn process) |
+| `endpoint: http://...` | SSE |
+| `endpoint: ws://...` | WebSocket |
+| `claude-in-chrome` | Unix socket |
 
-## Scenario Format (v2.1)
+## Config Auto-Detection
 
-```json
-{
-  "version": "2.1",
-  "metadata": {
-    "name": "Create GitHub Issue",
-    "description": "Creates an issue and notifies Slack"
-  },
-  "variables": {
-    "REPO": "owner/repo",
-    "TITLE": ""
-  },
-  "steps": [
-    {
-      "step": 1,
-      "id": "create_issue",
-      "tool": "mcp__github__create_issue",
-      "params": {
-        "repo": "{{REPO}}",
-        "title": "{{TITLE}}"
-      },
-      "output": {
-        "number": "$.number",
-        "url": "$.html_url"
-      }
-    },
-    {
-      "step": 2,
-      "tool": "mcp__slack__post_message",
-      "params": {
-        "channel": "#dev",
-        "text": "Issue #{{create_issue.number}} created: {{create_issue.url}}"
-      }
-    }
-  ]
-}
-```
+Sandy finds MCP configuration from:
 
-### Variable Substitution
+1. `$SANDY_CONFIG` environment variable
+2. `.sandy/config.json` (project local)
+3. Claude Desktop config
+4. Cursor config (`~/.cursor/mcp.json`)
+5. `~/.sandy/config.json` (global)
 
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| `{{VAR}}` | Static variable | `{{REPO}}` |
-| `{{step_id.field}}` | Runtime result reference | `{{create_issue.number}}` |
-
-### Step Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `step` | Yes | Step number |
-| `tool` | Yes | MCP tool name (`mcp__server__tool`) |
-| `params` | Yes | Tool parameters |
-| `id` | No | Identifier for result references |
-| `output` | No | JSONPath expressions to extract results |
-| `description` | No | Human-readable description |
-| `on_error` | No | Error handling: `"stop"`, `"skip"`, `"retry"` |
-| `retry` | No | Retry config: `{"count": 3, "delay": 500}` |
-| `wait_after` | No | Delay after step (seconds) |
-| `condition` | No | Conditional execution expression |
-
-## CLI Options
+<details>
+<summary>CLI Options (Advanced)</summary>
 
 ```bash
 python scripts/play.py <scenario.json> [options]
@@ -153,55 +121,33 @@ python scripts/play.py <scenario.json> [options]
 | Option | Description |
 |--------|-------------|
 | `--var KEY=VALUE` | Set variable (repeatable) |
-| `--env FILE` | Load variables from .env file |
-| `--config FILE` | Specify MCP config file path |
-| `--start N` | Start from step N (inclusive) |
-| `--end N` | End at step N (inclusive) |
+| `--env FILE` | Load variables from .env |
+| `--config FILE` | Specify MCP config path |
+| `--start N` | Start from step N |
+| `--end N` | End at step N |
 | `--include-results MODE` | Include MCP results: `true`, `false`, `on_failure` |
 | `--dry-run` | Validate without executing |
 | `--debug` | Enable debug output |
-| `--json` | Output result as JSON |
+| `--json` | Output as JSON |
 
-## Supported Transports
-
-| Config | Transport | Description |
-|--------|-----------|-------------|
-| `command: ...` | stdio | Spawn server process |
-| `endpoint: http://...` | SSE | Server-Sent Events |
-| `endpoint: ws://...` | WebSocket | WebSocket connection |
-| `claude-in-chrome` | Socket | Unix socket |
-
-## Config Auto-Detection
-
-Sandy automatically detects MCP configuration from:
-
-1. `$SANDY_CONFIG` environment variable
-2. `.sandy/config.json` (project local)
-3. Claude Desktop config
-4. Cursor config (`~/.cursor/mcp.json`)
-5. `~/.sandy/config.json` (global)
+</details>
 
 ## Project Structure
 
 ```
 sandy-skill/
 ├── .claude-plugin/
-│   ├── plugin.json          # Plugin manifest
-│   └── marketplace.json     # Marketplace manifest
-├── skills/
-│   └── play/
-│       └── SKILL.md         # /sandy:play skill
+│   └── plugin.json          # Plugin manifest
+├── skills/sandy/
+│   └── sandy.md             # Skill specification
 ├── scripts/
 │   ├── play.py              # CLI entry point
 │   ├── player.py            # Scenario executor
-│   ├── scenario.py          # Scenario parser
-│   ├── config.py            # Config detection
-│   ├── reporter.py          # Output formatting
 │   └── clients/             # MCP transport clients
-├── assets/
-│   └── examples/            # Example scenarios
-├── references/              # Documentation
-└── tests/                   # Unit tests
+├── assets/examples/         # Example scenarios
+├── references/
+│   └── schema.md            # Full JSON schema
+└── tests/
 ```
 
 ## Cross-Platform Compatibility
@@ -218,4 +164,4 @@ Sandy follows the [Agent Skills](https://agentskills.io) open standard:
 
 ## License
 
-MIT
+Apache License 2.0

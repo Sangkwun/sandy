@@ -1,186 +1,167 @@
 <div align="center">
 
-# Sandy 🦾
+# Sandy
 
 ### A Sandevistan for your AI Agent
-
-**Separate Thinking from Acting — Execute at Machine Speed**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-blueviolet)](https://github.com/Sangkwun/sandy)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io)
 
-[Why Sandy?](#why-sandy) • [Installation](#installation) • [Features](#features) • [Scenario Format](#scenario-format) • [Documentation](#documentation)
-
 </div>
 
 ---
 
-## Why Sandy?
+Sandy makes AI agents faster by letting them create and reuse MCP tool call sequences. Once a workflow is saved as a scenario, it replays without LLM inference—saving tokens and time.
 
-**What's the point of a browser automation bot that's slower than a human?**
+## What is Sandy?
 
-The reason traditional agents are slow is simple: **they think before every action.**
+Sandy is a **workflow accelerator** for AI agents. When an agent identifies a repeatable workflow, Sandy can:
 
-Sandy solves this by **separating Reasoning from Action**.
+1. **Store** the tool call sequence as a scenario
+2. **Parameterize** variable parts (URLs, IDs, search terms)
+3. **Replay** the exact sequence without LLM reasoning
 
-<br>
+| Without Sandy | With Sandy |
+|---------------|------------|
+| LLM inference every time | Record once, replay infinitely |
+| Token costs per execution | Zero-cost replay |
+| Variable timing | Deterministic execution |
 
-### 🐢 Traditional Agent (Agentic Loop)
+## How Agents Use Sandy
+
+**Create scenarios**: When an agent completes a repeatable workflow, it writes the MCP tool sequence as a scenario JSON file.
+
+**Reuse scenarios**: On similar requests, the agent finds existing scenarios and replays them instead of reasoning through the steps again.
+
+**Judgment**: The agent decides when a workflow is worth saving and when to reuse existing scenarios.
+
+### Example Flow
 
 ```
-Observe ➔ 🧠 LLM Reasoning (slow...) ➔ Action ➔ Observe ➔ 🧠 LLM... (repeat)
+User: "Scrape HN top stories and save to database"
+
+Agent (first time):
+  1. Executes workflow: navigate → scrape → insert
+  2. Recognizes pattern as reusable
+  3. Writes scenario to .sandy/scenarios/hn-scrape-to-db.json
+
+User: "Scrape HN again"
+
+Agent (subsequent):
+  1. Finds matching scenario
+  2. Replays via Sandy
+  3. Done—no LLM inference needed
 ```
-> Stops to think before every click. Every. Single. Time.
 
-<br>
+## Demo
 
-### 🐇 Sandy (Scenario Replay)
-
-```
-1️⃣ Pilot:  First Run ➔ Capture Workflow ➔ Save as Scenario
-2️⃣ Run:    Load Scenario ➔ ⚡ Execute at machine speed
-```
-> Once you've blazed the trail, just follow the path — no thinking required.
-
-<br>
-
-**The LLM only helps find the path once.** After that, Sandy replays the saved scenario deterministically.
-
-<br>
-
-### ▶️ Demo
-
-> Watch Sandy replay a scenario at machine speed
+Watch what Sandy does and how it works:
 
 <a href="https://www.youtube.com/watch?v=owgyGYL4SVs">
   <img src="https://img.youtube.com/vi/owgyGYL4SVs/hqdefault.jpg" alt="Sandy Demo" width="600">
 </a>
 
-<br>
-
-### 📊 At a Glance
-
-| | 🐢 Without Sandy | 🐇 With Sandy |
-|:---:|:---|:---|
-| **Cost** | Token costs on every execution | Zero tokens after first run |
-| **Speed** | LLM inference latency per step | Instant, deterministic execution |
-| **Consistency** | Variable LLM outputs | Reproducible results every time |
-| **Use Case** | Exploration, first-time tasks | CI/CD, regression tests, repetitive workflows |
-
----
-
-## How It Works
-
-```
-┌─────────────────┐      Pilot      ┌─────────────────┐
-│   AI Agent      │ ───────────────▶│   Scenario      │
-│  (with LLM)     │                 │    (.json)      │
-└─────────────────┘                 └────────┬────────┘
-                                            │
-                                            │ Play (no LLM)
-                                            ▼
-┌─────────────────┐                 ┌─────────────────┐
-│   MCP Servers   │ ◀───────────────│     Sandy       │
-│ (GitHub, DB...) │   Direct calls  │   ⚡ Fast       │
-└─────────────────┘                 └─────────────────┘
-```
-
----
-
 ## Installation
 
-### Claude Code Plugin (Recommended)
+### As Claude Code Plugin
 
-```bash
-# 1. Add marketplace
-/plugin marketplace add Sangkwun/sandy
-
-# 2. Install plugin
-/plugin install sandy@Sangkwun-sandy
+```shell
+/plugin marketplace add sangkwun/sandy-skill
+/plugin install sandy@sangkwun-sandy-skill
 ```
 
-**Usage:**
-```bash
-/sandy play scenario.json
-/sandy play scenario.json --var TITLE="Bug Fix"
-/sandy list
-/sandy new my-workflow
-```
+**That's it.** Once installed, the agent can:
+- Identify repeatable workflows
+- Write them as scenario files
+- Replay them without LLM inference
 
-### Standalone CLI
+### As Standalone CLI
 
 ```bash
-# Install dependencies
-pip install -r sandy-skill/requirements.txt
-
-# Run scenario
-python sandy-skill/scripts/play.py scenario.json
-
-# With variables
-python sandy-skill/scripts/play.py scenario.json --var TITLE="Bug fix"
-
-# Partial execution (for debugging)
-python sandy-skill/scripts/play.py scenario.json --start 2 --end 4
+pip install mcp jsonpath-ng python-dotenv
+python sandy-skill/scripts/play.py scenario.json --json
 ```
-
----
-
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| **Multi-Transport** | stdio, SSE, WebSocket, Unix socket |
-| **Config Auto-Detection** | Claude Desktop, Cursor, Sandy configs |
-| **Variable Substitution** | `{{VAR}}`, `{{step_id.field}}` |
-| **Output Extraction** | JSONPath expressions |
-| **Error Handling** | retry, skip, stop strategies |
-| **Partial Execution** | `--start`, `--end` flags for debugging |
-
----
 
 ## Scenario Format
 
-Sandy uses JSON scenarios (v2.1) to define tool call sequences:
+Scenarios are JSON files defining MCP tool sequences:
 
 ```json
 {
   "version": "2.1",
-  "metadata": { "name": "Create Issue and Notify" },
+  "metadata": { "name": "Query Database" },
+  "variables": { "LIMIT": "5" },
   "steps": [
     {
       "step": 1,
-      "id": "create_issue",
-      "tool": "mcp__github__create_issue",
-      "params": { "repo": "{{REPO}}", "title": "{{TITLE}}" },
-      "output": { "number": "$.number", "url": "$.html_url" }
-    },
-    {
-      "step": 2,
-      "tool": "mcp__slack__post_message",
-      "params": {
-        "channel": "#dev",
-        "text": "Issue #{{create_issue.number}} created: {{create_issue.url}}"
-      }
+      "tool": "mcp__supabase__query",
+      "params": { "sql": "SELECT * FROM users LIMIT {{LIMIT}}" }
     }
   ]
 }
 ```
 
-**Key concepts:**
-- **Variables**: `{{VAR}}` - passed via `--var` flag
-- **Step outputs**: `{{step_id.field}}` - reference previous results
-- **JSONPath**: Extract specific fields from tool responses
+**Full schema**: See [sandy-skill/references/schema.md](sandy-skill/references/schema.md)
 
----
+## Supported Transports
+
+| Config | Transport |
+|--------|-----------|
+| `command: ...` | stdio (spawn process) |
+| `endpoint: http://...` | SSE |
+| `endpoint: ws://...` | WebSocket |
+| `claude-in-chrome` | Unix socket |
+
+## Config Auto-Detection
+
+Sandy finds MCP configuration from:
+
+1. `$SANDY_CONFIG` environment variable
+2. `.sandy/config.json` (project local)
+3. Claude Desktop config
+4. Cursor config (`~/.cursor/mcp.json`)
+5. `~/.sandy/config.json` (global)
+
+<details>
+<summary>CLI Options (Advanced)</summary>
+
+```bash
+python sandy-skill/scripts/play.py <scenario.json> [options]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--var KEY=VALUE` | Set variable (repeatable) |
+| `--env FILE` | Load variables from .env |
+| `--config FILE` | Specify MCP config path |
+| `--start N` | Start from step N |
+| `--end N` | End at step N |
+| `--include-results MODE` | Include MCP results: `true`, `false`, `on_failure` |
+| `--dry-run` | Validate without executing |
+| `--debug` | Enable debug output |
+| `--json` | Output as JSON |
+
+</details>
 
 ## Documentation
 
 | Resource | Description |
 |----------|-------------|
-| [Sandy Skill README](sandy-skill/README.md) | Detailed usage guide |
 | [Scenario Schema](sandy-skill/references/schema.md) | JSON format specification |
 | [Example Scenarios](sandy-skill/assets/examples/) | Working examples |
+
+## Cross-Platform Compatibility
+
+Sandy follows the [Agent Skills](https://agentskills.io) open standard:
+
+| Tool | Support |
+|------|---------|
+| Claude Code | Full |
+| OpenAI Codex CLI | Full |
+| Gemini CLI | Full |
+| Cursor | Full |
+| GitHub Copilot | Full |
 
 ---
 
