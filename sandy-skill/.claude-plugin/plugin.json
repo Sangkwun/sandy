@@ -1,7 +1,7 @@
 {
   "name": "sandy",
   "description": "Deterministic MCP scenario replay - Agent creates and reuses tool call sequences without LLM inference",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "author": {
     "name": "sangkwun"
   },

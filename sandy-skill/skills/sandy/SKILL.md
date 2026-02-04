@@ -8,6 +8,38 @@ allowed-tools: Bash, Read, Write, Glob
 
 Sandy replays MCP tool call sequences without LLM inference. When you identify a repeatable workflow, create a scenario to accelerate future executions.
 
+## On Invocation
+
+When `/sandy` is called, **immediately analyze the current session**:
+
+1. **Review tool calls** made in this session (both `mcp__*` and `claude__*` tools)
+2. **Identify patterns** - Are there repeatable sequences? (e.g., navigate → click → extract, or read → edit → bash)
+3. **Check existing scenarios** - Search `.sandy/scenarios/` for matches
+4. **Suggest actions**:
+   - If a reusable pattern exists → Offer to save as scenario
+   - If a matching scenario exists → Offer to replay it
+   - If no patterns found → Explain Sandy's purpose and wait for user direction
+
+**Supported tool prefixes:**
+- `mcp__<server>__<tool>` - MCP server tools (e.g., `mcp__chrome-devtools__click`)
+- `claude__<tool>` - Claude Code native tools (see list below)
+- `sandy__<tool>` - Sandy built-in tools (e.g., `sandy__wait`, `sandy__log`)
+
+**Supported Claude native tools:**
+| Tool | Description |
+|------|-------------|
+| `claude__read` | Read file contents |
+| `claude__write` | Write file contents |
+| `claude__edit` | Edit file with string replacement |
+| `claude__glob` | Find files by pattern |
+| `claude__grep` | Search file contents with regex |
+| `claude__bash` | Execute shell commands |
+| `claude__web_fetch` | Fetch URL contents |
+| `claude__notebook_edit` | Edit Jupyter notebooks |
+
+**Example response:**
+> "I found a repeating pattern in this session: `claude__glob` → `claude__read` → `claude__edit`. Would you like to save this workflow as a scenario?"
+
 ## Why Sandy
 
 | Benefit | Description |
