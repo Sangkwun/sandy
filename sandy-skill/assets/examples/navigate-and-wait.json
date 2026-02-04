@@ -1,0 +1,31 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "navigate-and-wait",
+    "description": "Micro-pattern: Navigate to URL and wait for text to appear"
+  },
+  "variables": {
+    "URL": "",
+    "WAIT_TEXT": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "navigate",
+      "tool": "mcp__chrome-devtools__navigate_page",
+      "params": {
+        "url": "{{URL}}"
+      },
+      "description": "Navigate to the target URL"
+    },
+    {
+      "step": 2,
+      "id": "wait",
+      "tool": "mcp__chrome-devtools__wait_for",
+      "params": {
+        "text": "{{WAIT_TEXT}}"
+      },
+      "description": "Wait for expected text to appear"
+    }
+  ]
+}

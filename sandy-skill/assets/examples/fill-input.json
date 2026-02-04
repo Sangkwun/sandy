@@ -1,0 +1,33 @@
+{
+  "version": "2.1",
+  "metadata": {
+    "name": "fill-input",
+    "description": "Micro-pattern: Take snapshot and fill an input field"
+  },
+  "variables": {
+    "ELEMENT_UID": "",
+    "VALUE": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "snapshot",
+      "tool": "mcp__chrome-devtools__take_snapshot",
+      "params": {},
+      "output": {
+        "content": "$"
+      },
+      "description": "Take page snapshot to get element UIDs"
+    },
+    {
+      "step": 2,
+      "id": "fill",
+      "tool": "mcp__chrome-devtools__fill",
+      "params": {
+        "uid": "{{ELEMENT_UID}}",
+        "value": "{{VALUE}}"
+      },
+      "description": "Fill the input field with value"
+    }
+  ]
+}
