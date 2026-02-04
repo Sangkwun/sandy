@@ -49,12 +49,12 @@ Observe ➔ 🧠 LLM Reasoning (slow...) ➔ Action ➔ Observe ➔ 🧠 LLM... 
 
 <br>
 
-### ▶️ See the Difference
+### ▶️ Demo
 
-> ⚠️ **The right side (Sandy) is real-time, NOT sped up — but faster than the agent alone.**
+> Watch Sandy replay a scenario at machine speed
 
-<a href="https://www.youtube.com/watch?v=nSKs8sy7o2c">
-  <img src="https://img.youtube.com/vi/nSKs8sy7o2c/maxresdefault.jpg" alt="Sandy Demo" width="600">
+<a href="https://www.youtube.com/watch?v=owgyGYL4SVs">
+  <img src="https://img.youtube.com/vi/owgyGYL4SVs/hqdefault.jpg" alt="Sandy Demo" width="600">
 </a>
 
 <br>
