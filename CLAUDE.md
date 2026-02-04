@@ -34,7 +34,7 @@ sandy/
 │   ├── .sandy/
 │   │   └── config.json            # MCP server configuration
 │   ├── skills/sandy/
-│   │   └── sandy.md               # Skill specification (for Claude Code)
+│   │   └── SKILL.md               # Skill specification (for Claude Code)
 │   ├── scripts/                   # Core Python implementation
 │   │   ├── play.py               # CLI entry point
 │   │   ├── player.py             # Scenario executor

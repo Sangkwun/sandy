@@ -67,14 +67,21 @@ Watch what Sandy does and how it works:
 ### As Claude Code Plugin
 
 ```shell
-/plugin marketplace add sangkwun/sandy-skill
-/plugin install sandy@sangkwun-sandy-skill
+claude plugin marketplace add Sangkwun/sandy
+claude plugin install sandy@sangkwun
 ```
 
-**That's it.** Once installed, the agent can:
-- Identify repeatable workflows
+**That's it.** Once installed:
+- Use `/sandy` command to invoke the skill
+- Agent can identify repeatable workflows
 - Write them as scenario files
 - Replay them without LLM inference
+
+**Update existing installation:**
+```shell
+claude plugin marketplace update sangkwun
+claude plugin update sandy@sangkwun
+```
 
 ### As Standalone CLI
 
