@@ -41,10 +41,12 @@ try:
     from .scenario import Scenario, Step, parse_tool_name, VAR_PATTERN
     from .config import Config, get_server_config
     from .clients import MCPClient, create_client
+    from .native_tools import ClaudeTools
 except ImportError:
     from scenario import Scenario, Step, parse_tool_name, VAR_PATTERN
     from config import Config, get_server_config
     from clients import MCPClient, create_client
+    from native_tools import ClaudeTools
 
 
 @dataclass
@@ -286,6 +288,10 @@ class ScenarioPlayer:
         if step.tool.startswith("sandy__"):
             return await self._execute_internal_tool(step, substituted_params, step_result)
 
+        # Handle Claude native tools (no MCP call)
+        if step.tool.startswith("claude__"):
+            return await self._execute_claude_tool(step, substituted_params, step_result)
+
         # Get retry settings
         max_retries = 1
         retry_delay = 0.5
@@ -481,6 +487,52 @@ class ScenarioPlayer:
         except Exception as e:
             step_result.success = False
             step_result.error = str(e)
+
+        return step_result
+
+    async def _execute_claude_tool(
+        self,
+        step: Step,
+        params: dict[str, Any],
+        step_result: StepResult,
+    ) -> StepResult:
+        """
+        Execute Claude Code native tools (no MCP call)
+
+        Supported tools:
+        - claude__read: Read file contents
+        - claude__write: Write file contents
+        - claude__edit: Edit file with string replacement
+        - claude__glob: Find files by pattern
+        - claude__grep: Search file contents
+        - claude__bash: Execute shell commands
+        - claude__web_fetch: Fetch URL contents
+        - claude__notebook_edit: Edit Jupyter notebooks
+        """
+        tool_name = step.tool.removeprefix("claude__")
+
+        if self.options.debug:
+            print(f"  [CLAUDE] {tool_name}")
+            print(f"    params: {json.dumps(params, indent=2, default=str)}")
+
+        result = await ClaudeTools.execute(tool_name, params)
+
+        if result.success:
+            step_result.success = True
+            step_result.result = result.data
+
+            # Extract outputs
+            if step.id and step.output:
+                self._extract_output(step.id, step.output, result.data)
+
+            if self.options.debug:
+                data_str = json.dumps(result.data, indent=2, default=str)
+                if len(data_str) > 500:
+                    data_str = data_str[:500] + "..."
+                print(f"    result: {data_str}")
+        else:
+            step_result.success = False
+            step_result.error = result.error
 
         return step_result
 

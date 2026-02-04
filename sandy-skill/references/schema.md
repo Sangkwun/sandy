@@ -470,6 +470,247 @@ Append data to a file in various formats. Useful for collecting scraped data or 
 }
 ```
 
+## Claude Native Tools
+
+Sandy provides implementations of Claude Code's native tools that don't require MCP servers. These tools use the `claude__` prefix and behave identically to their Claude Code counterparts.
+
+### claude__read
+
+Read file contents with optional line offset and limit.
+
+```json
+{
+  "step": 1,
+  "id": "read_config",
+  "tool": "claude__read",
+  "params": {
+    "file_path": "/path/to/file.txt",
+    "offset": 10,
+    "limit": 50
+  },
+  "output": { "content": "$.content" }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `file_path` | string | Yes | Absolute path to the file |
+| `offset` | number | No | Line number to start reading from (1-based) |
+| `limit` | number | No | Number of lines to read |
+
+### claude__write
+
+Write content to a file. Creates parent directories if needed.
+
+```json
+{
+  "step": 2,
+  "tool": "claude__write",
+  "params": {
+    "file_path": "/path/to/output.txt",
+    "content": "File content here"
+  }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `file_path` | string | Yes | Absolute path to the file |
+| `content` | string | Yes | Content to write |
+
+### claude__edit
+
+Edit a file by replacing a string.
+
+```json
+{
+  "step": 3,
+  "tool": "claude__edit",
+  "params": {
+    "file_path": "/path/to/file.py",
+    "old_string": "def old_function():",
+    "new_string": "def new_function():",
+    "replace_all": false
+  }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `file_path` | string | Yes | Absolute path to the file |
+| `old_string` | string | Yes | Text to replace (must be unique unless replace_all) |
+| `new_string` | string | Yes | Replacement text |
+| `replace_all` | boolean | No | Replace all occurrences (default: false) |
+
+### claude__glob
+
+Find files matching a glob pattern.
+
+```json
+{
+  "step": 4,
+  "id": "find_tests",
+  "tool": "claude__glob",
+  "params": {
+    "pattern": "**/*_test.py",
+    "path": "/project/src"
+  },
+  "output": { "files": "$.files" }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `pattern` | string | Yes | Glob pattern (e.g., `**/*.py`) |
+| `path` | string | No | Directory to search in (default: current directory) |
+
+### claude__grep
+
+Search file contents with regex.
+
+```json
+{
+  "step": 5,
+  "id": "search",
+  "tool": "claude__grep",
+  "params": {
+    "pattern": "def\\s+\\w+\\(",
+    "path": "/project/src",
+    "glob": "*.py",
+    "output_mode": "files_with_matches"
+  },
+  "output": { "files": "$.files" }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `pattern` | string | Yes | Regex pattern to search for |
+| `path` | string | No | File or directory to search |
+| `glob` | string | No | Glob pattern to filter files |
+| `output_mode` | string | No | `content`, `files_with_matches` (default), or `count` |
+| `context` | number | No | Lines of context around matches |
+| `head_limit` | number | No | Limit number of results |
+| `case_insensitive` | boolean | No | Case insensitive search |
+
+### claude__bash
+
+Execute a shell command.
+
+```json
+{
+  "step": 6,
+  "id": "run_tests",
+  "tool": "claude__bash",
+  "params": {
+    "command": "pytest tests/ -v",
+    "timeout": 300000
+  },
+  "output": {
+    "stdout": "$.stdout",
+    "exit_code": "$.exit_code"
+  }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `command` | string | Yes | Command to execute |
+| `timeout` | number | No | Timeout in milliseconds (default: 120000) |
+
+### claude__web_fetch
+
+Fetch content from a URL.
+
+```json
+{
+  "step": 7,
+  "id": "fetch_api",
+  "tool": "claude__web_fetch",
+  "params": {
+    "url": "https://api.example.com/data"
+  },
+  "output": { "content": "$.content" }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `url` | string | Yes | URL to fetch |
+
+**Note:** Requires `httpx` package. HTML content is automatically converted to markdown if `markdownify` is installed.
+
+### claude__notebook_edit
+
+Edit a Jupyter notebook cell.
+
+```json
+{
+  "step": 8,
+  "tool": "claude__notebook_edit",
+  "params": {
+    "notebook_path": "/path/to/notebook.ipynb",
+    "cell_id": "abc123",
+    "new_source": "print('Hello World')",
+    "edit_mode": "replace"
+  }
+}
+```
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `notebook_path` | string | Yes | Absolute path to the notebook |
+| `new_source` | string | Yes | New source content |
+| `cell_id` | string | Depends | Cell ID (required for replace/delete) |
+| `cell_type` | string | Depends | `code` or `markdown` (required for insert) |
+| `edit_mode` | string | No | `replace` (default), `insert`, or `delete` |
+
+**Note:** Requires `nbformat` package.
+
+### Example: Mixed MCP and Claude Tools
+
+```json
+{
+  "version": "2.1",
+  "metadata": { "name": "Test and Report" },
+  "variables": {
+    "TEST_DIR": "/project/tests",
+    "REPORT_CHANNEL": "#ci"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "id": "find_tests",
+      "tool": "claude__glob",
+      "params": { "pattern": "**/*_test.py", "path": "{{TEST_DIR}}" },
+      "output": { "count": "$.count" }
+    },
+    {
+      "step": 2,
+      "id": "run_tests",
+      "tool": "claude__bash",
+      "params": { "command": "pytest {{TEST_DIR}} --json-report" },
+      "output": { "exit_code": "$.exit_code" }
+    },
+    {
+      "step": 3,
+      "id": "read_report",
+      "tool": "claude__read",
+      "params": { "file_path": "/project/.report.json" },
+      "output": { "content": "$.content" }
+    },
+    {
+      "step": 4,
+      "tool": "mcp__slack__post_message",
+      "params": {
+        "channel": "{{REPORT_CHANNEL}}",
+        "text": "Tests completed: {{find_tests.count}} files, exit code: {{run_tests.exit_code}}"
+      }
+    }
+  ]
+}
+```
+
 ## Legacy v1.1 Compatibility
 
 Sandy supports v1.1 scenarios with `action` field instead of `tool`:
