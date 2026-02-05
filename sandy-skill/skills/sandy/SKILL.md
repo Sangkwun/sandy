@@ -1,6 +1,6 @@
 ---
 name: sandy
-description: Deterministic MCP scenario replay - Agent creates and reuses MCP tool call sequences without LLM inference.
+description: MCP action building blocks - Replay tool sequences to save tokens. Use for: (1) Full automation when all steps are deterministic, (2) Micro patterns like click-and-wait or scroll-and-wait where Sandy executes actions, then LLM calls screenshot for visual analysis.
 allowed-tools: Bash, Read, Write, Glob
 ---
 
@@ -14,9 +14,14 @@ When `/sandy` is called, **immediately analyze the current session**:
 
 1. **Review tool calls** made in this session (both `mcp__*` and `claude__*` tools)
 2. **Identify patterns** - Are there repeatable sequences? (e.g., navigate → click → extract, or read → edit → bash)
-3. **Check existing scenarios** - Search `.sandy/scenarios/` for matches
-4. **Suggest actions**:
+3. **Check for micro-pattern opportunities**:
+   - If using browser/UI tools (chrome-devtools, computer-use, etc.)
+   - And similar actions will likely repeat
+   - → Suggest short Sandy sequences (click-screenshot, scroll-screenshot)
+4. **Check existing scenarios** - Search `.sandy/scenarios/` for matches
+5. **Suggest actions**:
    - If a reusable pattern exists → Offer to save as scenario
+   - If a micro-pattern fits → Suggest hybrid approach (Sandy for actions, LLM for judgment)
    - If a matching scenario exists → Offer to replay it
    - If no patterns found → Explain Sandy's purpose and wait for user direction
 
@@ -48,11 +53,61 @@ When `/sandy` is called, **immediately analyze the current session**:
 | **Speed** | Direct MCP calls, no reasoning overhead |
 | **Consistency** | Identical execution every time |
 
-### When NOT to Use
+## Usage Patterns
 
+### Full Automation (Best Fit)
+All steps are deterministic, no intermediate judgment needed.
+- Data collection, form filling, batch operations
+- CI/CD pipelines, scheduled tasks
+- Results saved to file for later review
+
+### Hybrid Pattern
+Sandy handles actions, LLM handles judgment between sequences.
+- Works when judgment points are infrequent
+- Less effective if judgment needed after every action
+
+### When NOT to Use
 - One-time operations
-- Tasks requiring dynamic decision-making
-- Exploratory workflows
+- **Immediate visual judgment required** after each action (e.g., UI inspection where every screenshot needs analysis)
+- Tasks where Sandy→LLM→Sandy switching adds more overhead than direct MCP calls
+
+> **Key question:** Can results be batched for later review, or is immediate judgment needed?
+> - Batch review possible → Sandy fits well
+> - Immediate judgment needed → Direct MCP may be simpler
+
+## Micro Patterns (Building Blocks)
+
+Short sequences combined with LLM judgment for complex tasks.
+
+**Note:** Sandy CLI cannot return images visually. Screenshot should be called directly by LLM after Sandy execution.
+
+| Pattern | Sandy Steps | Then LLM |
+|---------|-------------|----------|
+| `click-and-check` | click → wait | screenshot (direct call) |
+| `scroll-and-check` | scroll → wait | screenshot (direct call) |
+| `type-submit` | fill → click | - |
+| `navigate-and-check` | navigate → wait | screenshot (direct call) |
+
+**Micro Pattern example:**
+```json
+{
+  "version": "2.1",
+  "metadata": { "name": "click-and-wait", "description": "Click then wait for render" },
+  "variables": { "UID": "" },
+  "steps": [
+    { "step": 1, "id": "click", "tool": "mcp__chrome-devtools__click", "params": { "uid": "{{UID}}" } },
+    { "step": 2, "id": "wait", "tool": "sandy__wait", "params": { "duration": 0.5 } }
+  ]
+}
+```
+
+**Hybrid workflow:**
+```
+1. LLM: Analyze page → identify element UID
+2. Sandy: Execute `click-and-wait`
+3. LLM: Call screenshot directly → visual analysis
+4. Repeat...
+```
 
 ## When to Save a Scenario
 

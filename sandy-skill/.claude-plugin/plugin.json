@@ -1,7 +1,7 @@
 {
   "name": "sandy",
-  "description": "Deterministic MCP scenario replay - Agent creates and reuses tool call sequences without LLM inference",
-  "version": "1.4.0",
+  "description": "MCP action building blocks - Replay tool sequences to save tokens. Use for: (1) Full automation when all steps are deterministic, (2) Micro patterns like click-and-wait or scroll-and-wait where Sandy executes actions, then LLM calls screenshot for visual analysis.",
+  "version": "1.5.0",
   "author": {
     "name": "sangkwun"
   },
